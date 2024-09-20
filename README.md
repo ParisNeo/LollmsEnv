@@ -48,3 +48,6 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 ## Support
 
 If you encounter any problems or have any questions, please open an issue in the [GitHub repository](https://github.com/ParisNeo/LollmsEnv/issues).
+
+![GitHub last commit](https://img.shields.io/github/last-commit/ParisNeo/LollmsEnv)
+![GitHub release (latest by date)](https://img.shields.io/github/v/release/ParisNeo/LollmsEnv)
