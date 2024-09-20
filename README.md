@@ -6,7 +6,12 @@
 ![GitHub issues](https://img.shields.io/github/issues/ParisNeo/LollmsEnv)
 
 LollmsEnv is a lightweight environment management tool for Lollms projects. It allows you to install multiple Python versions, create and manage virtual environments, and install packages without requiring a pre-existing Python installation.
-
+## Features
+- Install and manage multiple Python versions
+- Create and manage virtual environments
+- Install and upgrade packages
+- Export and import requirements
+- Works without administrative privileges
 ## Installation
 
 ### Windows
@@ -37,6 +42,22 @@ LollmsEnv is a lightweight environment management tool for Lollms projects. It a
 
 2. Now you can use LollmsEnv commands. See [usage.md](docs/usage.md) for detailed usage instructions.
 
+For detailed usage instructions, see docs/usage.md
+## Commands
+- install-python [version]: Install a specific Python version
+- create-env [name] [python-version]: Create a new virtual environment
+- activate [name]: Activate a virtual environment
+- deactivate: Deactivate the current virtual environment
+- install [package]: Install a package in the current environment
+- list-packages: List installed packages
+- upgrade-package [package]: Upgrade a package
+- export-requirements [file]: Export environment requirements
+- import-requirements [file]: Import environment requirements
+- uninstall-python [version]: Uninstall a Python version
+- remove-env [name]: Remove a virtual environment
+- update-tool: Update LollmsEnv
+- list-pythons: List installed Python versions
+- list-envs: List available environments
 ## License
 
 This project is licensed under the Apache License, Version 2.0 - see the [LICENSE](LICENSE) file for details.
@@ -48,6 +69,9 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 ## Support
 
 If you encounter any problems or have any questions, please open an issue in the [GitHub repository](https://github.com/ParisNeo/LollmsEnv/issues).
+
+## Credits
+LollmsEnv is built by ParisNeo using Lollms.
 
 ![GitHub last commit](https://img.shields.io/github/last-commit/ParisNeo/LollmsEnv)
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/ParisNeo/LollmsEnv)
