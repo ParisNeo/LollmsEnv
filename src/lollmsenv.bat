@@ -1,7 +1,11 @@
 @echo off
 :: lollmsenv.bat
-
-set LOLLMS_HOME=%USERPROFILE%\.lollmsenv
+:: Check for local installation
+if exist %~dp0..\.lollmsenv (
+    set LOLLMS_HOME=%~dp0..\.lollmsenv
+) else (
+    set LOLLMS_HOME=%USERPROFILE%\.lollmsenv
+)
 set PYTHON_DIR=%LOLLMS_HOME%\pythons
 set ENVS_DIR=%LOLLMS_HOME%\envs
 
