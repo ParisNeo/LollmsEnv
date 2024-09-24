@@ -1,70 +1,115 @@
 #!/bin/bash
 # lollmsenv.sh
-# Determine the installation directory
+set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"
 LOLLMS_HOME="$(dirname "$SCRIPT_DIR")"
 PYTHON_DIR="$LOLLMS_HOME/pythons"
 ENVS_DIR="$LOLLMS_HOME/envs"
 BUNDLES_DIR="$LOLLMS_HOME/bundles"
-install_python() {
-    VERSION=$1
-    CUSTOM_DIR=$2
-    OS=$(uname -s | tr '[:upper:]' '[:lower:]')
-    ARCH=$(uname -m)
+TEMP_DIR="/tmp/lollmsenv"
+mkdir -p "$PYTHON_DIR" "$ENVS_DIR" "$BUNDLES_DIR" "$TEMP_DIR"
+log() {
+    echo "[$(date +'%Y-%m-%d %H:%M:%S')] $1"
+}
+error() {
+    log "ERROR: $1" >&2
+    exit 1
+}
+cleanup() {
+    log "Cleaning up temporary files..."
+    rm -rf "$TEMP_DIR"
+}
+trap cleanup EXIT
+get_python_url() {
+    local VERSION=$1
+    local OS=$(uname -s | tr '[:upper:]' '[:lower:]')
+    local ARCH=$(uname -m)
+    local RELEASE_URL="https://api.github.com/repos/indygreg/python-build-standalone/releases/latest"
     
+    local ASSET_NAME
     case $OS in
         linux)
-            URL="https://github.com/indygreg/python-build-standalone/releases/download/20230507/cpython-${VERSION}+20230507-${ARCH}-unknown-linux-gnu-pgo+lto.tar.gz"
+            ASSET_NAME="cpython-${VERSION}+*-${ARCH}-unknown-linux-gnu-pgo+lto.tar.gz"
             ;;
         darwin)
             if [ "$ARCH" == "arm64" ]; then
-                URL="https://github.com/indygreg/python-build-standalone/releases/download/20230507/cpython-${VERSION}+20230507-aarch64-apple-darwin-pgo+lto.tar.gz"
+                ASSET_NAME="cpython-${VERSION}+*-aarch64-apple-darwin-pgo+lto.tar.gz"
             else
-                URL="https://github.com/indygreg/python-build-standalone/releases/download/20230507/cpython-${VERSION}+20230507-x86_64-apple-darwin-pgo+lto.tar.gz"
+                ASSET_NAME="cpython-${VERSION}+*-x86_64-apple-darwin-pgo+lto.tar.gz"
             fi
             ;;
         *)
-            echo "Unsupported operating system: $OS"
-            exit 1
+            error "Unsupported operating system: $OS"
             ;;
     esac
+    
+    curl -s "$RELEASE_URL" | grep -o "https://github.com.*${ASSET_NAME}" | head -n 1
+}
+install_python() {
+    local VERSION=$1
+    local CUSTOM_DIR=$2
+    local URL=$(get_python_url "$VERSION")
+    
+    if [ -z "$URL" ]; then
+        error "Failed to find Python $VERSION download URL"
+    fi
+    
+    log "Downloading Python $VERSION from $URL"
+    
     if [ -z "$CUSTOM_DIR" ]; then
         TARGET_DIR="$PYTHON_DIR/$VERSION"
     else
         TARGET_DIR="$CUSTOM_DIR/$VERSION"
     fi
+    
     mkdir -p "$TARGET_DIR"
-    curl -L -o "$TARGET_DIR/python.tar.gz" "$URL"
-    tar -xzf "$TARGET_DIR/python.tar.gz" -C "$TARGET_DIR" --strip-components=1
-    rm "$TARGET_DIR/python.tar.gz"
-    # Ensure pip and venv are installed
-    "$TARGET_DIR/bin/python3" -m ensurepip --upgrade
-    "$TARGET_DIR/bin/python3" -m pip install --upgrade pip
-    "$TARGET_DIR/bin/python3" -m pip install virtualenv
-    # Add to tracking file
+    
+    local ARCHIVE="$TEMP_DIR/python-$VERSION.tar.gz"
+    curl -L -o "$ARCHIVE" "$URL" || error "Failed to download Python $VERSION"
+    
+    log "Extracting Python $VERSION to $TARGET_DIR"
+    tar -xzf "$ARCHIVE" -C "$TARGET_DIR" --strip-components=1 || error "Failed to extract Python $VERSION"
+    
+    log "Ensuring pip and venv are installed"
+    "$TARGET_DIR/bin/python3" -m ensurepip --upgrade || error "Failed to ensure pip is installed"
+    "$TARGET_DIR/bin/python3" -m pip install --upgrade pip || error "Failed to upgrade pip"
+    "$TARGET_DIR/bin/python3" -m pip install virtualenv || error "Failed to install virtualenv"
+    
     echo "$VERSION:$TARGET_DIR" >> "$PYTHON_DIR/installed_pythons.txt"
-    echo "Python $VERSION installed successfully with pip and venv in $TARGET_DIR."
+    log "Python $VERSION installed successfully with pip and venv in $TARGET_DIR"
 }
 create_env() {
-    ENV_NAME=$1
-    PYTHON_VERSION=$2
-    CUSTOM_DIR=$3
-    PYTHON_PATH=$(grep "^$PYTHON_VERSION:" "$PYTHON_DIR/installed_pythons.txt" | cut -d':' -f2)/bin/python3
+    local ENV_NAME=$1
+    local PYTHON_VERSION=$2
+    local CUSTOM_DIR=$3
+    
+    local PYTHON_PATH=$(grep "^$PYTHON_VERSION:" "$PYTHON_DIR/installed_pythons.txt" | cut -d':' -f2)/bin/python3
+    
+    if [ ! -f "$PYTHON_PATH" ]; then
+        error "Python $PYTHON_VERSION is not installed"
+    fi
+    
     if [ -z "$CUSTOM_DIR" ]; then
         ENV_PATH="$ENVS_DIR/$ENV_NAME"
     else
         ENV_PATH="$CUSTOM_DIR/$ENV_NAME"
     fi
-    "$PYTHON_PATH" -m venv "$ENV_PATH"
     
-    # Add to tracking file
+    log "Creating virtual environment '$ENV_NAME' with Python $PYTHON_VERSION in $ENV_PATH"
+    "$PYTHON_PATH" -m venv "$ENV_PATH" || error "Failed to create virtual environment"
+    
     echo "$ENV_NAME:$ENV_PATH:$PYTHON_VERSION" >> "$ENVS_DIR/installed_envs.txt"
-    echo "Environment '$ENV_NAME' created with Python $PYTHON_VERSION in $ENV_PATH"
+    log "Environment '$ENV_NAME' created successfully"
 }
 activate_env() {
-    ENV_NAME=$1
-    ENV_PATH=$(grep "^$ENV_NAME:" "$ENVS_DIR/installed_envs.txt" | cut -d':' -f2)
-    ACTIVATE_SCRIPT="$ENV_PATH/bin/activate"
+    local ENV_NAME=$1
+    local ENV_PATH=$(grep "^$ENV_NAME:" "$ENVS_DIR/installed_envs.txt" | cut -d':' -f2)
+    
+    if [ -z "$ENV_PATH" ]; then
+        error "Environment '$ENV_NAME' not found"
+    fi
+    
+    local ACTIVATE_SCRIPT="$ENV_PATH/bin/activate"
     echo "To activate the environment, run:"
     echo "source $ACTIVATE_SCRIPT"
 }
@@ -73,9 +118,9 @@ deactivate_env() {
     echo "deactivate"
 }
 install_package() {
-    PACKAGE=$1
-    pip install "$PACKAGE"
-    echo "Package '$PACKAGE' installed in the current environment"
+    local PACKAGE=$1
+    pip install "$PACKAGE" || error "Failed to install package '$PACKAGE'"
+    log "Package '$PACKAGE' installed in the current environment"
 }
 list_pythons() {
     echo "Installed Python versions:"
@@ -86,14 +131,16 @@ list_envs() {
     cat "$ENVS_DIR/installed_envs.txt"
 }
 create_bundle() {
-    BUNDLE_NAME=$1
-    PYTHON_VERSION=$2
-    ENV_NAME=$3
-    BUNDLE_DIR="$BUNDLES_DIR/$BUNDLE_NAME"
+    local BUNDLE_NAME=$1
+    local PYTHON_VERSION=$2
+    local ENV_NAME=$3
+    local BUNDLE_DIR="$BUNDLES_DIR/$BUNDLE_NAME"
+    
     mkdir -p "$BUNDLE_DIR"
     install_python "$PYTHON_VERSION" "$BUNDLE_DIR"
     create_env "$ENV_NAME" "$PYTHON_VERSION" "$BUNDLE_DIR"
-    echo "Bundle '$BUNDLE_NAME' created with Python $PYTHON_VERSION and environment '$ENV_NAME' in $BUNDLE_DIR"
+    
+    log "Bundle '$BUNDLE_NAME' created with Python $PYTHON_VERSION and environment '$ENV_NAME' in $BUNDLE_DIR"
 }
 show_help() {
     echo "lollmsenv - Python and Virtual Environment Management Tool"
@@ -119,19 +166,19 @@ show_help() {
 }
 case $1 in
     install-python)
-        install_python $2 $3
+        install_python "$2" "$3"
         ;;
     create-env)
-        create_env $2 $3 $4
+        create_env "$2" "$3" "$4"
         ;;
     activate)
-        activate_env $2
+        activate_env "$2"
         ;;
     deactivate)
         deactivate_env
         ;;
     install)
-        install_package $2
+        install_package "$2"
         ;;
     list-pythons)
         list_pythons
@@ -140,12 +187,12 @@ case $1 in
         list_envs
         ;;
     create-bundle)
-        create_bundle $2 $3 $4
+        create_bundle "$2" "$3" "$4"
         ;;
     --help|-h)
         show_help
         ;;
     *)
-        echo "Unknown command. Use --help or -h for usage information."
+        error "Unknown command. Use --help or -h for usage information."
         ;;
 esac
