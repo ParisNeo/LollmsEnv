@@ -1,5 +1,9 @@
 #!/bin/bash
 # lollmsenv.sh
+# LollmsEnv - Lightweight environment management tool for Lollms projects
+# Copyright (c) 2024 ParisNeo
+# Licensed under the Apache License, Version 2.0
+# Built by ParisNeo using Lollms
 set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"
 LOLLMS_HOME="$(dirname "$SCRIPT_DIR")"
@@ -8,18 +12,42 @@ ENVS_DIR="$LOLLMS_HOME/envs"
 BUNDLES_DIR="$LOLLMS_HOME/bundles"
 TEMP_DIR="/tmp/lollmsenv"
 mkdir -p "$PYTHON_DIR" "$ENVS_DIR" "$BUNDLES_DIR" "$TEMP_DIR"
+
 log() {
     echo "[$(date +'%Y-%m-%d %H:%M:%S')] $1"
 }
+
 error() {
     log "ERROR: $1" >&2
     exit 1
 }
+
 cleanup() {
     log "Cleaning up temporary files..."
     rm -rf "$TEMP_DIR"
 }
 trap cleanup EXIT
+
+scan_for_python() {
+    local VERSION=$1
+    local LOCATIONS=(
+        "/usr/bin/python$VERSION"
+        "/usr/local/bin/python$VERSION"
+        "$HOME/.pyenv/versions/$VERSION/bin/python"
+        "$HOME/anaconda3/envs/py$VERSION/bin/python"
+        "$HOME/miniconda3/envs/py$VERSION/bin/python"
+    )
+
+    for loc in "${LOCATIONS[@]}"; do
+        if [ -x "$loc" ]; then
+            echo "$loc"
+            return 0
+        fi
+    done
+
+    return 1
+}
+
 get_python_url() {
     local VERSION=$1
     local OS=$(uname -s | tr '[:upper:]' '[:lower:]')
@@ -29,13 +57,13 @@ get_python_url() {
     local ASSET_NAME
     case $OS in
         linux)
-            ASSET_NAME="cpython-${VERSION}+*-${ARCH}-unknown-linux-gnu-pgo+lto.tar.gz"
+            ASSET_NAME="cpython-${VERSION}*-${ARCH}-unknown-linux-gnu-pgo+lto.tar.gz"
             ;;
         darwin)
             if [ "$ARCH" == "arm64" ]; then
-                ASSET_NAME="cpython-${VERSION}+*-aarch64-apple-darwin-pgo+lto.tar.gz"
+                ASSET_NAME="cpython-${VERSION}*-aarch64-apple-darwin-pgo+lto.tar.gz"
             else
-                ASSET_NAME="cpython-${VERSION}+*-x86_64-apple-darwin-pgo+lto.tar.gz"
+                ASSET_NAME="cpython-${VERSION}*-x86_64-apple-darwin-pgo+lto.tar.gz"
             fi
             ;;
         *)
@@ -45,9 +73,32 @@ get_python_url() {
     
     curl -s "$RELEASE_URL" | grep -o "https://github.com.*${ASSET_NAME}" | head -n 1
 }
+
 install_python() {
     local VERSION=$1
     local CUSTOM_DIR=$2
+    
+    # First, scan for existing Python installation
+    local EXISTING_PYTHON=$(scan_for_python "$VERSION")
+    
+    if [ -n "$EXISTING_PYTHON" ]; then
+        log "Found existing Python $VERSION installation at $EXISTING_PYTHON"
+        
+        if [ -z "$CUSTOM_DIR" ]; then
+            TARGET_DIR="$PYTHON_DIR/$VERSION"
+        else
+            TARGET_DIR="$CUSTOM_DIR/$VERSION"
+        fi
+        
+        mkdir -p "$TARGET_DIR"
+        ln -s "$EXISTING_PYTHON" "$TARGET_DIR/bin/python3"
+        ln -s "$(dirname "$EXISTING_PYTHON")/pip$VERSION" "$TARGET_DIR/bin/pip" 2>/dev/null || true
+        
+        log "Created symlinks to existing Python $VERSION in $TARGET_DIR"
+        echo "$VERSION:$TARGET_DIR" >> "$PYTHON_DIR/installed_pythons.txt"
+        return 0
+    fi
+    
     local URL=$(get_python_url "$VERSION")
     
     if [ -z "$URL" ]; then
@@ -78,6 +129,7 @@ install_python() {
     echo "$VERSION:$TARGET_DIR" >> "$PYTHON_DIR/installed_pythons.txt"
     log "Python $VERSION installed successfully with pip and venv in $TARGET_DIR"
 }
+
 create_env() {
     local ENV_NAME=$1
     local PYTHON_VERSION=$2
@@ -101,6 +153,7 @@ create_env() {
     echo "$ENV_NAME:$ENV_PATH:$PYTHON_VERSION" >> "$ENVS_DIR/installed_envs.txt"
     log "Environment '$ENV_NAME' created successfully"
 }
+
 activate_env() {
     local ENV_NAME=$1
     local ENV_PATH=$(grep "^$ENV_NAME:" "$ENVS_DIR/installed_envs.txt" | cut -d':' -f2)
@@ -113,23 +166,28 @@ activate_env() {
     echo "To activate the environment, run:"
     echo "source $ACTIVATE_SCRIPT"
 }
+
 deactivate_env() {
     echo "To deactivate the current environment, run:"
     echo "deactivate"
 }
+
 install_package() {
     local PACKAGE=$1
     pip install "$PACKAGE" || error "Failed to install package '$PACKAGE'"
     log "Package '$PACKAGE' installed in the current environment"
 }
+
 list_pythons() {
     echo "Installed Python versions:"
     cat "$PYTHON_DIR/installed_pythons.txt"
 }
+
 list_envs() {
     echo "Installed environments:"
     cat "$ENVS_DIR/installed_envs.txt"
 }
+
 create_bundle() {
     local BUNDLE_NAME=$1
     local PYTHON_VERSION=$2
@@ -142,6 +200,7 @@ create_bundle() {
     
     log "Bundle '$BUNDLE_NAME' created with Python $PYTHON_VERSION and environment '$ENV_NAME' in $BUNDLE_DIR"
 }
+
 show_help() {
     echo "lollmsenv - Python and Virtual Environment Management Tool"
     echo
@@ -160,10 +219,12 @@ show_help() {
     echo
     echo "Description:"
     echo "  This tool helps manage Python installations and virtual environments."
-    echo "  It allows you to install multiple Python versions, create and manage"
+    echo "  It scans for existing Python installations before downloading."
+    echo "  You can install multiple Python versions, create and manage"
     echo "  virtual environments, and create bundles of Python with environments."
     echo "  You can also install Python and environments in custom directories."
 }
+
 case $1 in
     install-python)
         install_python "$2" "$3"
