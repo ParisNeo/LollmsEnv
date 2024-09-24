@@ -1,10 +1,12 @@
 #!/bin/bash
-# lollmsenv.sh
+
 # LollmsEnv - Lightweight environment management tool for Lollms projects
 # Copyright (c) 2024 ParisNeo
 # Licensed under the Apache License, Version 2.0
 # Built by ParisNeo using Lollms
+
 set -e
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"
 LOLLMS_HOME="$(dirname "$SCRIPT_DIR")"
 PYTHON_DIR="$LOLLMS_HOME/pythons"
@@ -52,18 +54,18 @@ get_python_url() {
     local VERSION=$1
     local OS=$(uname -s | tr '[:upper:]' '[:lower:]')
     local ARCH=$(uname -m)
-    local RELEASE_URL="https://api.github.com/repos/indygreg/python-build-standalone/releases/latest"
+    local RELEASE_URL="https://api.github.com/repos/indygreg/python-build-standalone/releases"
     
     local ASSET_NAME
     case $OS in
         linux)
-            ASSET_NAME="cpython-${VERSION}*-${ARCH}-unknown-linux-gnu-pgo+lto.tar.gz"
+            ASSET_NAME="cpython-${VERSION}+*-${ARCH}-unknown-linux-gnu-pgo+lto.tar.gz"
             ;;
         darwin)
             if [ "$ARCH" == "arm64" ]; then
-                ASSET_NAME="cpython-${VERSION}*-aarch64-apple-darwin-pgo+lto.tar.gz"
+                ASSET_NAME="cpython-${VERSION}+*-aarch64-apple-darwin-pgo+lto.tar.gz"
             else
-                ASSET_NAME="cpython-${VERSION}*-x86_64-apple-darwin-pgo+lto.tar.gz"
+                ASSET_NAME="cpython-${VERSION}+*-x86_64-apple-darwin-pgo+lto.tar.gz"
             fi
             ;;
         *)
@@ -71,7 +73,17 @@ get_python_url() {
             ;;
     esac
     
-    curl -s "$RELEASE_URL" | grep -o "https://github.com.*${ASSET_NAME}" | head -n 1
+    # Try to find the exact version first
+    local URL=$(curl -s "$RELEASE_URL" | grep -o "https://github.com.*${ASSET_NAME}" | head -n 1)
+    
+    # If exact version is not found, try with a more flexible pattern
+    if [ -z "$URL" ]; then
+        local MAJOR_MINOR=$(echo $VERSION | cut -d. -f1-2)
+        ASSET_NAME="cpython-${MAJOR_MINOR}.*-${ARCH}-unknown-linux-gnu-pgo+lto.tar.gz"
+        URL=$(curl -s "$RELEASE_URL" | grep -o "https://github.com.*${ASSET_NAME}" | head -n 1)
+    fi
+    
+    echo "$URL"
 }
 
 install_python() {
@@ -102,7 +114,14 @@ install_python() {
     local URL=$(get_python_url "$VERSION")
     
     if [ -z "$URL" ]; then
-        error "Failed to find Python $VERSION download URL"
+        log "WARNING: Failed to find Python $VERSION download URL. Trying to find a compatible version..."
+        local MAJOR_MINOR=$(echo $VERSION | cut -d. -f1-2)
+        URL=$(get_python_url "$MAJOR_MINOR")
+        if [ -z "$URL" ]; then
+            error "Failed to find a compatible Python version for $VERSION"
+        else
+            log "Found a compatible version. Using $URL"
+        fi
     fi
     
     log "Downloading Python $VERSION from $URL"
