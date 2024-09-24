@@ -9,6 +9,9 @@ show_help() {
     echo "  -h, --help    Show this help message and exit."
 }
 # Parse command-line arguments
+LOCAL_INSTALL=0
+NO_MODIFY_RC=0
+INSTALL_DIR=""
 while [[ $# -gt 0 ]]; do
     case $1 in
         --local)
@@ -48,17 +51,17 @@ cp src/lollmsenv.sh "$SCRIPT_DIR/lollmsenv"
 chmod +x "$SCRIPT_DIR/lollmsenv"
 cp activate.sh "$INSTALL_DIR"
 chmod +x "$INSTALL_DIR/activate.sh"
-if [ "$LOCAL_INSTALL" -eq 0 ] && [ "$NO_MODIFY_RC" -eq 0 ]; then
+if [ "$LOCAL_INSTALL" -eq 0 ] && [ -z "$NO_MODIFY_RC" ]; then
     echo 'export PATH="$PATH:$HOME/.lollmsenv/bin"' >> "$HOME/.bashrc"
     echo 'export PATH="$PATH:$HOME/.lollmsenv/bin"' >> "$HOME/.zshrc"
     echo "LollmsEnv has been installed globally. Please restart your terminal or run 'source ~/.bashrc' (or ~/.zshrc) to use it."
 else
-    echo "LollmsEnv has been installed locally in the current directory."
-    echo "To use LollmsEnv, run 'source activate.sh' in this directory."
+    echo "LollmsEnv has been installed in: $INSTALL_DIR"
+    echo "To use LollmsEnv, run 'source $INSTALL_DIR/activate.sh'"
     if [ "$NO_MODIFY_RC" -eq 1 ]; then
         echo '#!/bin/bash' > "$INSTALL_DIR/source.sh"
         echo 'export PATH="$PATH:'"$SCRIPT_DIR"'"' >> "$INSTALL_DIR/source.sh"
         chmod +x "$INSTALL_DIR/source.sh"
-        echo "A source.sh script has been generated. Run 'source source.sh' to use LollmsEnv."
+        echo "A source.sh script has been generated. Run 'source $INSTALL_DIR/source.sh' to use LollmsEnv."
     fi
 fi
