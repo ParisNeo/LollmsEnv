@@ -220,6 +220,12 @@ create_bundle() {
     log "Bundle '$BUNDLE_NAME' created with Python $PYTHON_VERSION and environment '$ENV_NAME' in $BUNDLE_DIR"
 }
 
+list_available_pythons() {
+    local RELEASE_URL="https://api.github.com/repos/indygreg/python-build-standalone/releases"
+    log "Fetching available Python versions..."
+    curl -s "$RELEASE_URL" | grep -o 'cpython-[0-9.]*+' | sort -u | sed 's/cpython-//;s/+$//'
+}
+
 show_help() {
     echo "lollmsenv - Python and Virtual Environment Management Tool"
     echo
@@ -233,6 +239,7 @@ show_help() {
     echo "  install [package]                      Install a package in the current environment"
     echo "  list-pythons                           List installed Python versions"
     echo "  list-envs                              List installed virtual environments"
+    echo "  list-available-pythons                 List available Python versions for installation"
     echo "  create-bundle [name] [python-version] [env-name]  Create a bundle with Python and environment"
     echo "  --help, -h                             Show this help message"
     echo
@@ -265,6 +272,9 @@ case $1 in
         ;;
     list-envs)
         list_envs
+        ;;
+    list-available-pythons)
+        list_available_pythons
         ;;
     create-bundle)
         create_bundle "$2" "$3" "$4"
