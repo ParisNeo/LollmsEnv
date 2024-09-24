@@ -36,7 +36,7 @@ get_platform_info() {
     
     case $OS in
         linux)
-            echo "${ARCH}-unknown-linux-gnu"
+            echo "${ARCH}-.*linux-gnu"
             ;;
         darwin)
             if [ "$ARCH" == "arm64" ]; then
@@ -50,6 +50,25 @@ get_platform_info() {
             ;;
     esac
 }
+
+list_available_pythons() {
+    local RELEASE_URL="https://api.github.com/repos/indygreg/python-build-standalone/releases"
+    local PLATFORM=$(get_platform_info)
+    log "Fetching available Python versions for $PLATFORM..."
+    curl -s "$RELEASE_URL" | grep -oP "cpython-\d+\.\d+\.\d+\+\d+.*${PLATFORM}.*\.tar\.gz" | sed 's/cpython-//;s/+.*$//' | sort -u -V
+}
+
+get_python_url() {
+    local VERSION=$1
+    local PLATFORM=$(get_platform_info)
+    local RELEASE_URL="https://api.github.com/repos/indygreg/python-build-standalone/releases"
+    
+    local ASSET_NAME="cpython-${VERSION}+.*${PLATFORM}.*\.tar\.gz"
+    
+    local URL=$(curl -s "$RELEASE_URL" | grep -oP "https://github.com/indygreg/python-build-standalone/releases/download/[^\"]*${ASSET_NAME}" | head -n 1)
+    echo "$URL"
+}
+
 
 scan_for_python() {
     local VERSION=$1
@@ -71,16 +90,6 @@ scan_for_python() {
     return 1
 }
 
-get_python_url() {
-    local VERSION=$1
-    local PLATFORM=$(get_platform_info)
-    local RELEASE_URL="https://api.github.com/repos/indygreg/python-build-standalone/releases"
-    
-    local ASSET_NAME="cpython-${VERSION}+.*${PLATFORM}-pgo+lto.tar.gz"
-    
-    local URL=$(curl -s "$RELEASE_URL" | grep -o "https://github.com/indygreg/python-build-standalone/releases/download/[^\"]*${ASSET_NAME}" | head -n 1)
-    echo "$URL"
-}
 
 install_python() {
     local VERSION=$1
@@ -207,13 +216,6 @@ create_bundle() {
     create_env "$ENV_NAME" "$PYTHON_VERSION" "$BUNDLE_DIR"
     
     log "Bundle '$BUNDLE_NAME' created with Python $PYTHON_VERSION and environment '$ENV_NAME' in $BUNDLE_DIR"
-}
-
-list_available_pythons() {
-    local RELEASE_URL="https://api.github.com/repos/indygreg/python-build-standalone/releases"
-    local PLATFORM=$(get_platform_info)
-    log "Fetching available Python versions for $PLATFORM..."
-    curl -s "$RELEASE_URL" | grep -o "cpython-[0-9.]*+.*${PLATFORM}-pgo+lto.tar.gz" | sed 's/cpython-//;s/+.*$//' | sort -u
 }
 
 show_help() {
