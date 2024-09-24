@@ -1,4 +1,9 @@
 #!/bin/bash
+# LollmsEnv - Lightweight environment management tool for Lollms projects
+# Copyright (c) 2024 ParisNeo
+# Licensed under the Apache License, Version 2.0
+# Built by ParisNeo using Lollms
+
 # Function to display help message
 show_help() {
     echo "Usage: $0 [--local] [--dir <directory>] [--no-modify-rc] [-h|--help]"
