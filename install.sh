@@ -1,23 +1,49 @@
 #!/bin/bash
-
-if [ "$1" == "--local" ]; then
-    INSTALL_DIR="$PWD/.lollmsenv"
-    LOCAL_INSTALL=1
-else
-    INSTALL_DIR="$HOME/.lollmsenv"
-    LOCAL_INSTALL=0
+# Function to display help message
+show_help() {
+    echo "Usage: $0 [--local] [--dir <directory>] [-h|--help]"
+    echo "Options:"
+    echo "  --local       Install LollmsEnv locally in the current directory."
+    echo "  --dir <directory> Install LollmsEnv in the specified directory."
+    echo "  -h, --help    Show this help message and exit."
+}
+# Parse command-line arguments
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --local)
+            LOCAL_INSTALL=1
+            shift
+            ;;
+        --dir)
+            INSTALL_DIR="$2"
+            shift 2
+            ;;
+        -h|--help)
+            show_help
+            exit 0
+            ;;
+        *)
+            echo "Unknown option: $1"
+            show_help
+            exit 1
+            ;;
+    esac
+done
+# Set default installation directory if not specified
+if [ -z "$INSTALL_DIR" ]; then
+    if [ "$LOCAL_INSTALL" -eq 1 ]; then
+        INSTALL_DIR="$PWD/.lollmsenv"
+    else
+        INSTALL_DIR="$HOME/.lollmsenv"
+    fi
 fi
-
 SCRIPT_DIR="$INSTALL_DIR/bin"
-
 mkdir -p "$SCRIPT_DIR"
-
 cp src/lollmsenv.sh "$SCRIPT_DIR/lollmsenv"
 chmod +x "$SCRIPT_DIR/lollmsenv"
 cp activate.sh "$INSTALL_DIR"
 chmod +x "$INSTALL_DIR/activate.sh"
-
-if [ $LOCAL_INSTALL -eq 0 ]; then
+if [ "$LOCAL_INSTALL" -eq 0 ]; then
     echo 'export PATH="$PATH:$HOME/.lollmsenv/bin"' >> "$HOME/.bashrc"
     echo 'export PATH="$PATH:$HOME/.lollmsenv/bin"' >> "$HOME/.zshrc"
     echo "LollmsEnv has been installed globally. Please restart your terminal or run 'source ~/.bashrc' (or ~/.zshrc) to use it."
