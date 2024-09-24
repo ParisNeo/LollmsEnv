@@ -48,7 +48,7 @@ cp src/lollmsenv.sh "$SCRIPT_DIR/lollmsenv"
 chmod +x "$SCRIPT_DIR/lollmsenv"
 cp activate.sh "$INSTALL_DIR"
 chmod +x "$INSTALL_DIR/activate.sh"
-if [ "$LOCAL_INSTALL" -eq 0 ] && [ -z "$NO_MODIFY_RC" ]; then
+if [ "$LOCAL_INSTALL" -eq 0 ] && [ "$NO_MODIFY_RC" -eq 0 ]; then
     echo 'export PATH="$PATH:$HOME/.lollmsenv/bin"' >> "$HOME/.bashrc"
     echo 'export PATH="$PATH:$HOME/.lollmsenv/bin"' >> "$HOME/.zshrc"
     echo "LollmsEnv has been installed globally. Please restart your terminal or run 'source ~/.bashrc' (or ~/.zshrc) to use it."
