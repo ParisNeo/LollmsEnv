@@ -1,12 +1,9 @@
 #!/bin/bash
-
 # LollmsEnv - Lightweight environment management tool for Lollms projects
 # Copyright (c) 2024 ParisNeo
 # Licensed under the Apache License, Version 2.0
 # Built by ParisNeo using Lollms
-
 set -e
-
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"
 LOLLMS_HOME="$(dirname "$SCRIPT_DIR")"
 PYTHON_DIR="$LOLLMS_HOME/pythons"
@@ -14,22 +11,18 @@ ENVS_DIR="$LOLLMS_HOME/envs"
 BUNDLES_DIR="$LOLLMS_HOME/bundles"
 TEMP_DIR="/tmp/lollmsenv"
 mkdir -p "$PYTHON_DIR" "$ENVS_DIR" "$BUNDLES_DIR" "$TEMP_DIR"
-
 log() {
     echo "[$(date +'%Y-%m-%d %H:%M:%S')] $1"
 }
-
 error() {
     log "ERROR: $1" >&2
     exit 1
 }
-
 cleanup() {
     log "Cleaning up temporary files..."
     rm -rf "$TEMP_DIR"
 }
 trap cleanup EXIT
-
 get_platform_info() {
     local OS=$(uname -s | tr '[:upper:]' '[:lower:]')
     local ARCH=$(uname -m)
@@ -50,26 +43,22 @@ get_platform_info() {
             ;;
     esac
 }
-
 list_available_pythons() {
     local RELEASE_URL="https://api.github.com/repos/indygreg/python-build-standalone/releases"
     local PLATFORM=$(get_platform_info)
     log "Fetching available Python versions for $PLATFORM..."
-    curl -s "$RELEASE_URL" | grep -oP "cpython-\d+\.\d+\.\d+\+\d+.*${PLATFORM}.*\.tar\.gz" | sed 's/cpython-//;s/+.*$//' | sort -u -V
+    curl -s "$RELEASE_URL" | grep -oP "cpython-\d+\.\d+\.\d+\+\d+.${PLATFORM}.\.tar\.gz" | sed 's/cpython-//;s/+.*$//' | sort -u -V
 }
-
 get_python_url() {
     local VERSION=$1
     local PLATFORM=$(get_platform_info)
     local RELEASE_URL="https://api.github.com/repos/indygreg/python-build-standalone/releases"
     
-    local ASSET_NAME="cpython-${VERSION}+.*${PLATFORM}.*\.tar\.gz"
+    local ASSET_NAME="cpython-${VERSION}+.${PLATFORM}.\.tar\.gz"
     
     local URL=$(curl -s "$RELEASE_URL" | grep -oP "https://github.com/indygreg/python-build-standalone/releases/download/[^\"]*${ASSET_NAME}" | head -n 1)
     echo "$URL"
 }
-
-
 scan_for_python() {
     local VERSION=$1
     local LOCATIONS=(
@@ -79,18 +68,14 @@ scan_for_python() {
         "$HOME/anaconda3/envs/py$VERSION/bin/python"
         "$HOME/miniconda3/envs/py$VERSION/bin/python"
     )
-
     for loc in "${LOCATIONS[@]}"; do
         if [ -x "$loc" ]; then
             echo "$loc"
             return 0
         fi
     done
-
     return 1
 }
-
-
 install_python() {
     local VERSION=$1
     local CUSTOM_DIR=$2
@@ -146,7 +131,6 @@ install_python() {
     echo "$VERSION:$TARGET_DIR" >> "$PYTHON_DIR/installed_pythons.txt"
     log "Python $VERSION installed successfully with pip and venv in $TARGET_DIR"
 }
-
 create_env() {
     local ENV_NAME=$1
     local PYTHON_VERSION=$2
@@ -170,7 +154,6 @@ create_env() {
     echo "$ENV_NAME:$ENV_PATH:$PYTHON_VERSION" >> "$ENVS_DIR/installed_envs.txt"
     log "Environment '$ENV_NAME' created successfully"
 }
-
 activate_env() {
     local ENV_NAME=$1
     local ENV_PATH=$(grep "^$ENV_NAME:" "$ENVS_DIR/installed_envs.txt" | cut -d':' -f2)
@@ -183,28 +166,23 @@ activate_env() {
     echo "To activate the environment, run:"
     echo "source $ACTIVATE_SCRIPT"
 }
-
 deactivate_env() {
     echo "To deactivate the current environment, run:"
     echo "deactivate"
 }
-
 install_package() {
     local PACKAGE=$1
     pip install "$PACKAGE" || error "Failed to install package '$PACKAGE'"
     log "Package '$PACKAGE' installed in the current environment"
 }
-
 list_pythons() {
     echo "Installed Python versions:"
     cat "$PYTHON_DIR/installed_pythons.txt"
 }
-
 list_envs() {
     echo "Installed environments:"
     cat "$ENVS_DIR/installed_envs.txt"
 }
-
 create_bundle() {
     local BUNDLE_NAME=$1
     local PYTHON_VERSION=$2
@@ -217,7 +195,32 @@ create_bundle() {
     
     log "Bundle '$BUNDLE_NAME' created with Python $PYTHON_VERSION and environment '$ENV_NAME' in $BUNDLE_DIR"
 }
-
+delete_env() {
+    local ENV_NAME=$1
+    local ENV_PATH=$(grep "^$ENV_NAME:" "$ENVS_DIR/installed_envs.txt" | cut -d':' -f2)
+    
+    if [ -z "$ENV_PATH" ]; then
+        error "Environment '$ENV_NAME' not found"
+    fi
+    
+    log "Deleting environment '$ENV_NAME' from $ENV_PATH"
+    rm -rf "$ENV_PATH"
+    sed -i "/^$ENV_NAME:/d" "$ENVS_DIR/installed_envs.txt"
+    log "Environment '$ENV_NAME' deleted successfully"
+}
+delete_python() {
+    local VERSION=$1
+    local PYTHON_PATH=$(grep "^$VERSION:" "$PYTHON_DIR/installed_pythons.txt" | cut -d':' -f2)
+    
+    if [ -z "$PYTHON_PATH" ]; then
+        error "Python $VERSION is not installed"
+    fi
+    
+    log "Deleting Python $VERSION from $PYTHON_PATH"
+    rm -rf "$PYTHON_PATH"
+    sed -i "/^$VERSION:/d" "$PYTHON_DIR/installed_pythons.txt"
+    log "Python $VERSION deleted successfully"
+}
 show_help() {
     echo "lollmsenv - Python and Virtual Environment Management Tool"
     echo
@@ -233,6 +236,8 @@ show_help() {
     echo "  list-envs                              List installed virtual environments"
     echo "  list-available-pythons                 List available Python versions for installation"
     echo "  create-bundle [name] [python-version] [env-name]  Create a bundle with Python and environment"
+    echo "  delete-env [name]                      Delete a virtual environment"
+    echo "  delete-python [version]                Delete a Python installation"
     echo "  --help, -h                             Show this help message"
     echo
     echo "Description:"
@@ -241,8 +246,8 @@ show_help() {
     echo "  You can install multiple Python versions, create and manage"
     echo "  virtual environments, and create bundles of Python with environments."
     echo "  You can also install Python and environments in custom directories."
+    echo "  Now you can delete environments and Python installations as well."
 }
-
 case $1 in
     install-python)
         install_python "$2" "$3"
@@ -270,6 +275,12 @@ case $1 in
         ;;
     create-bundle)
         create_bundle "$2" "$3" "$4"
+        ;;
+    delete-env)
+        delete_env "$2"
+        ;;
+    delete-python)
+        delete_python "$2"
         ;;
     --help|-h)
         show_help
