@@ -59,13 +59,13 @@ get_python_url() {
     local ASSET_NAME
     case $OS in
         linux)
-            ASSET_NAME="cpython-${VERSION}+*-${ARCH}-unknown-linux-gnu-pgo+lto.tar.gz"
+            ASSET_NAME="cpython-${VERSION}.*-${ARCH}-unknown-linux-gnu-pgo+lto.tar.gz"
             ;;
         darwin)
             if [ "$ARCH" == "arm64" ]; then
-                ASSET_NAME="cpython-${VERSION}+*-aarch64-apple-darwin-pgo+lto.tar.gz"
+                ASSET_NAME="cpython-${VERSION}.*-aarch64-apple-darwin-pgo+lto.tar.gz"
             else
-                ASSET_NAME="cpython-${VERSION}+*-x86_64-apple-darwin-pgo+lto.tar.gz"
+                ASSET_NAME="cpython-${VERSION}.*-x86_64-apple-darwin-pgo+lto.tar.gz"
             fi
             ;;
         *)
@@ -73,10 +73,8 @@ get_python_url() {
             ;;
     esac
     
-    # Try to find the exact version first
     local URL=$(curl -s "$RELEASE_URL" | grep -o "https://github.com.*${ASSET_NAME}" | head -n 1)
     
-    # If exact version is not found, try with a more flexible pattern
     if [ -z "$URL" ]; then
         local MAJOR_MINOR=$(echo $VERSION | cut -d. -f1-2)
         ASSET_NAME="cpython-${MAJOR_MINOR}.*-${ARCH}-unknown-linux-gnu-pgo+lto.tar.gz"
@@ -114,14 +112,7 @@ install_python() {
     local URL=$(get_python_url "$VERSION")
     
     if [ -z "$URL" ]; then
-        log "WARNING: Failed to find Python $VERSION download URL. Trying to find a compatible version..."
-        local MAJOR_MINOR=$(echo $VERSION | cut -d. -f1-2)
-        URL=$(get_python_url "$MAJOR_MINOR")
-        if [ -z "$URL" ]; then
-            error "Failed to find a compatible Python version for $VERSION"
-        else
-            log "Found a compatible version. Using $URL"
-        fi
+        error "Failed to find Python $VERSION download URL"
     fi
     
     log "Downloading Python $VERSION from $URL"
