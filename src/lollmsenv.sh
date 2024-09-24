@@ -12,13 +12,13 @@ install_python() {
     
     case $OS in
         linux)
-            URL="https://github.com/indygreg/python-build-standalone/releases/download/20230507/cpython-${VERSION}+20230507-${ARCH}-unknown-linux-gnu-install_only.tar.gz"
+            URL="https://github.com/indygreg/python-build-standalone/releases/download/20230507/cpython-${VERSION}+20230507-${ARCH}-unknown-linux-gnu-pgo+lto.tar.gz"
             ;;
         darwin)
             if [ "$ARCH" == "arm64" ]; then
-                URL="https://github.com/indygreg/python-build-standalone/releases/download/20230507/cpython-${VERSION}+20230507-aarch64-apple-darwin-install_only.tar.gz"
+                URL="https://github.com/indygreg/python-build-standalone/releases/download/20230507/cpython-${VERSION}+20230507-aarch64-apple-darwin-pgo+lto.tar.gz"
             else
-                URL="https://github.com/indygreg/python-build-standalone/releases/download/20230507/cpython-${VERSION}+20230507-x86_64-apple-darwin-install_only.tar.gz"
+                URL="https://github.com/indygreg/python-build-standalone/releases/download/20230507/cpython-${VERSION}+20230507-x86_64-apple-darwin-pgo+lto.tar.gz"
             fi
             ;;
         *)
@@ -31,14 +31,17 @@ install_python() {
     curl -L -o "$TARGET_DIR/python.tar.gz" "$URL"
     tar -xzf "$TARGET_DIR/python.tar.gz" -C "$TARGET_DIR" --strip-components=1
     rm "$TARGET_DIR/python.tar.gz"
-    echo "Python $VERSION installed successfully."
+    # Ensure pip and venv are installed
+    "$TARGET_DIR/bin/python3" -m ensurepip --upgrade
+    "$TARGET_DIR/bin/python3" -m pip install --upgrade pip
+    "$TARGET_DIR/bin/python3" -m pip install virtualenv
+    echo "Python $VERSION installed successfully with pip and venv."
 }
 create_env() {
     ENV_NAME=$1
     PYTHON_VERSION=$2
     ENV_PATH="$ENVS_DIR/$ENV_NAME"
     PYTHON_PATH="$PYTHON_DIR/$PYTHON_VERSION/bin/python3"
-    mkdir -p "$ENV_PATH"
     "$PYTHON_PATH" -m venv "$ENV_PATH"
     echo "Environment '$ENV_NAME' created with Python $PYTHON_VERSION"
 }
