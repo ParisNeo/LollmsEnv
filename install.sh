@@ -24,6 +24,7 @@ while [[ $# -gt 0 ]]; do
             shift
             ;;
         --dir)
+            LOCAL_INSTALL=1
             INSTALL_DIR="$2"
             shift 2
             ;;
