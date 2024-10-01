@@ -4,6 +4,7 @@
 # Licensed under the Apache License, Version 2.0
 # Built by ParisNeo using Lollms
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+echo "$SCRIPT_DIR"
 if [ -d "$SCRIPT_DIR/.lollmsenv" ]; then
     export LOLLMSENV_DIR="$SCRIPT_DIR/.lollmsenv"
 else
