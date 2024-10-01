@@ -41,32 +41,47 @@ goto :show_help
 if "%INSTALL_DIR%"=="" (
     echo Setting default installation directory...
     if "%LOCAL_INSTALL%"=="1" (
-        set "INSTALL_DIR=%CD%\.lollmsenv"
-        echo Installing locally in the current directory: %INSTALL_DIR%
+        set "INSTALL_DIR=!CD!\.lollmsenv"
+        echo Installing locally in the current directory: !USERPROFILE!
     ) else (
-        set "INSTALL_DIR=%USERPROFILE%\.lollmsenv"
-        echo Installing in the user's profile directory: %INSTALL_DIR%
+        echo %USERPROFILE%
+        set "INSTALL_DIR=!USERPROFILE!\.lollmsenv"
+        echo Installing in the user's profile directory: !INSTALL_DIR!
     )
 )
 
 :: Create directories and copy files
 echo Creating installation directories...
-set "SCRIPT_DIR=%INSTALL_DIR%\bin"
+set "SCRIPT_DIR=!INSTALL_DIR!\bin"
 mkdir "%SCRIPT_DIR%" 2>nul
 echo Copying necessary files...
 copy "src\lollmsenv.bat" "%SCRIPT_DIR%\lollmsenv.bat" >nul
-copy "activate.bat" "%INSTALL_DIR%" >nul
-
+copy "activate.bat" "!INSTALL_DIR!" >nul
 :: Modify environment variables or create activation script
 if "%LOCAL_INSTALL%"=="0" if "%NO_MODIFY_RC%"=="0" (
     echo Modifying system PATH environment variable...
-    setx PATH "%PATH%;%INSTALL_DIR%\bin"
-    echo LollmsEnv has been installed globally. Please restart your command prompt to use it.
+    :: Get the current PATH from the registry
+    for /f "tokens=2*" %%A in ('reg query "HKCU\Environment" /v PATH') do set "CURRENT_PATH=%%B"
+
+    :: Check if the new path is already in the PATH
+    echo %CURRENT_PATH% | find /i "%INSTALL_DIR%\bin" > nul
+    if errorlevel 1 (
+        :: Path not found, let's add it
+        setx PATH "%CURRENT_PATH%;%INSTALL_DIR%\bin"
+        if errorlevel 0 (
+            echo Successfully added %INSTALL_DIR%\bin to PATH.
+        ) else (
+            echo Failed to add %INSTALL_DIR%\bin to PATH.
+        )
+    ) else (
+        echo %INSTALL_DIR%\bin is already in PATH.
+    )
+
 ) else (
     echo Generating source.bat script...
-    echo @echo off > "%INSTALL_DIR%\source.bat"
-    echo set "PATH=%%PATH%%;%SCRIPT_DIR%" >> "%INSTALL_DIR%\source.bat"
-    echo A source.bat script has been generated. Run '%INSTALL_DIR%\source.bat' to use LollmsEnv.
+    echo @echo off > "!INSTALL_DIR!\source.bat"
+    echo set "PATH=%%PATH%%;%SCRIPT_DIR%" >> "!INSTALL_DIR!\source.bat"
+    echo A source.bat script has been generated. Run '!INSTALL_DIR!\source.bat' to use LollmsEnv.
 )
 pause
 goto :eof
