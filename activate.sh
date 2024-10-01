@@ -5,8 +5,8 @@
 # Built by ParisNeo using Lollms
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 echo "$SCRIPT_DIR"
-if [ -d "$SCRIPT_DIR/.lollmsenv" ]; then
-    export LOLLMSENV_DIR="$SCRIPT_DIR/.lollmsenv"
+if [ -d "$SCRIPT_DIR" ]; then
+    export LOLLMSENV_DIR="$SCRIPT_DIR"
 else
     export LOLLMSENV_DIR="$HOME/.lollmsenv"
 fi
