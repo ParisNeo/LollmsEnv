@@ -39,26 +39,31 @@ goto :show_help
 
 :: Set default installation directory
 if "%INSTALL_DIR%"=="" (
+    echo Setting default installation directory...
     if "%LOCAL_INSTALL%"=="1" (
         set "INSTALL_DIR=%CD%\.lollmsenv"
+        echo Installing locally in the current directory: %INSTALL_DIR%
     ) else (
         set "INSTALL_DIR=%USERPROFILE%\.lollmsenv"
+        echo Installing in the user's profile directory: %INSTALL_DIR%
     )
 )
 
 :: Create directories and copy files
+echo Creating installation directories...
 set "SCRIPT_DIR=%INSTALL_DIR%\bin"
 mkdir "%SCRIPT_DIR%" 2>nul
+echo Copying necessary files...
 copy "src\lollmsenv.bat" "%SCRIPT_DIR%\lollmsenv.bat" >nul
 copy "activate.bat" "%INSTALL_DIR%" >nul
 
 :: Modify environment variables or create activation script
 if "%LOCAL_INSTALL%"=="0" if "%NO_MODIFY_RC%"=="0" (
+    echo Modifying system PATH environment variable...
     setx PATH "%PATH%;%INSTALL_DIR%\bin"
     echo LollmsEnv has been installed globally. Please restart your command prompt to use it.
 ) else (
-    echo LollmsEnv has been installed in: %INSTALL_DIR%
-    echo To use LollmsEnv, run '%INSTALL_DIR%\activate.bat'
+    echo Generating source.bat script...
     echo @echo off > "%INSTALL_DIR%\source.bat"
     echo set "PATH=%%PATH%%;%SCRIPT_DIR%" >> "%INSTALL_DIR%\source.bat"
     echo A source.bat script has been generated. Run '%INSTALL_DIR%\source.bat' to use LollmsEnv.
