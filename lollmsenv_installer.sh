@@ -24,6 +24,7 @@ cd "$TEMP_DIR"
 
 # Run the install script with forwarded parameters
 echo "Running installation..."
+chmod +x install.sh
 ./install.sh "$@"
 
 # Clean up
