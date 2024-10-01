@@ -96,7 +96,7 @@ if errorlevel 1 (
     exit /b 1
 )
 
-echo %VERSION%:%TARGET_DIR% >> "%PYTHON_DIR%\installed_pythons.txt"
+echo %VERSION%,%TARGET_DIR% >> "%PYTHON_DIR%\installed_pythons.txt"
 call :log Python %VERSION% installed successfully with pip and virtualenv in %TARGET_DIR%
 exit /b
 
@@ -109,10 +109,11 @@ echo Debug: Contents of installed_pythons.txt:
 type "%PYTHON_DIR%\installed_pythons.txt"
 
 set "PYTHON_PATH="
-for /f "tokens=1,* delims=:" %%a in ('findstr /b "%PYTHON_VERSION%:" "%PYTHON_DIR%\installed_pythons.txt"') do (
+for /f "tokens=1,2 delims=," %%a in ('findstr /b "%PYTHON_VERSION%," "%PYTHON_DIR%\installed_pythons.txt"') do (
     set "PYTHON_PATH=%%b"
     set "PYTHON_PATH=!PYTHON_PATH: =!"
 )
+
 
 echo Debug: Raw PYTHON_PATH = %PYTHON_PATH%
 
@@ -151,22 +152,74 @@ if errorlevel 1 (
     exit /b 1
 )
 
-echo %ENV_NAME%:%ENV_PATH%:%PYTHON_VERSION% >> "%ENVS_DIR%\installed_envs.txt"
+echo %ENV_NAME%,%ENV_PATH%,%PYTHON_VERSION% >> "%ENVS_DIR%\installed_envs.txt"
 call :log Environment '%ENV_NAME%' created successfully
 exit /b
 
 :activate_env
-set "ENV_NAME=%~1"
-for /f "tokens=2 delims=:" %%a in ('findstr /b "%ENV_NAME%:" "%ENVS_DIR%\installed_envs.txt"') do set "ENV_PATH=%%a"
 
-if "%ENV_PATH%"=="" (
+set "ENV_NAME=%~1"
+set "INSTALLED_ENVS_FILE=%ENVS_DIR%\installed_envs.txt"
+echo Debug: Searching for environment: %ENV_NAME%
+echo Debug: INSTALLED_ENVS_FILE path: %INSTALLED_ENVS_FILE%
+
+echo Debug: Searching for environment: %ENV_NAME%
+echo Debug: INSTALLED_ENVS_FILE path: %INSTALLED_ENVS_FILE%
+
+echo Debug: Content of INSTALLED_ENVS_FILE:
+type "%INSTALLED_ENVS_FILE%"
+echo.
+
+echo Debug: Searching for environment: %ENV_NAME%
+echo Debug: INSTALLED_ENVS_FILE path: %INSTALLED_ENVS_FILE%
+
+echo Debug: Content of INSTALLED_ENVS_FILE:
+type "%INSTALLED_ENVS_FILE%"
+echo.
+
+echo Debug: Searching for environment in file...
+for /f "tokens=1,2,3 delims=," %%a in ('findstr /b "%ENV_NAME%," "%INSTALLED_ENVS_FILE%"') do (
+    echo Debug: Match found - Name: %%a, Path: %%b, Version: %%c
+    set "ENV_PATH=%%b"
+    set "PYTHON_VERSION=%%c"
+)
+
+echo Debug: After search - ENV_PATH: !ENV_PATH!
+
+if "!ENV_PATH!"=="" (
     call :error Environment '%ENV_NAME%' not found
     exit /b 1
 )
 
-set "ACTIVATE_SCRIPT=%ENV_PATH%\Scripts\activate.bat"
-echo To activate the environment, run:
-echo %ACTIVATE_SCRIPT%
+set "ACTIVATE_SCRIPT=!ENV_PATH!\Scripts\activate.bat"
+echo Debug: ACTIVATE_SCRIPT path: !ACTIVATE_SCRIPT!
+
+if not exist "!ACTIVATE_SCRIPT!" (
+    echo Debug: Activation script not found at: !ACTIVATE_SCRIPT!
+    call :error Activation script not found: !ACTIVATE_SCRIPT!
+    exit /b 1
+)
+
+echo Environment found: %ENV_NAME%
+echo Path: !ENV_PATH!
+echo Python version: !PYTHON_VERSION!
+echo.
+echo Activating environment...
+
+call "!ACTIVATE_SCRIPT!"
+
+if errorlevel 1 (
+    call :error Failed to activate environment
+    exit /b 1
+)
+
+set "PROMPT=(%ENV_NAME%) $P$G"
+
+echo Environment activated. You are now using (%ENV_NAME%)
+echo Type 'exit' to deactivate the environment and return to the original prompt.
+
+cmd /k
+
 exit /b
 
 :deactivate_env
@@ -209,7 +262,7 @@ exit /b
 
 :delete_env
 set "ENV_NAME=%~1"
-for /f "tokens=2 delims=:" %%a in ('findstr /b "%ENV_NAME%:" "%ENVS_DIR%\installed_envs.txt"') do set "ENV_PATH=%%a"
+for /f "tokens=2 delims=," %%a in ('findstr /b "%ENV_NAME%:" "%ENVS_DIR%\installed_envs.txt"') do set "ENV_PATH=%%a"
 
 if "%ENV_PATH%"=="" (
     call :error Environment '%ENV_NAME%' not found
@@ -225,7 +278,7 @@ exit /b
 
 :delete_python
 set "VERSION=%~1"
-for /f "tokens=2 delims=:" %%a in ('findstr /b "%VERSION%:" "%PYTHON_DIR%\installed_pythons.txt"') do set "PYTHON_PATH=%%a"
+for /f "tokens=2 delims=," %%a in ('findstr /b "%VERSION%:" "%PYTHON_DIR%\installed_pythons.txt"') do set "PYTHON_PATH=%%a"
 
 if "%PYTHON_PATH%"=="" (
     call :error Python %VERSION% is not installed
