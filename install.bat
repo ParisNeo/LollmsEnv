@@ -63,7 +63,7 @@ if "%LOCAL_INSTALL%"=="0" if "%NO_MODIFY_RC%"=="0" (
     echo set "PATH=%%PATH%%;%SCRIPT_DIR%" >> "%INSTALL_DIR%\source.bat"
     echo A source.bat script has been generated. Run '%INSTALL_DIR%\source.bat' to use LollmsEnv.
 )
-
+pause
 goto :eof
 
 :show_help
@@ -73,4 +73,5 @@ echo   --local       Install LollmsEnv locally in the current directory.
 echo   --dir ^<directory^> Install LollmsEnv in the specified directory (locally).
 echo   --no-modify-rc Do not modify system PATH. Generate a source.bat script instead.
 echo   -h, --help    Show this help message and exit.
+pause
 goto :eof
