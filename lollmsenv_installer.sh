@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # URL of the latest release
-RELEASE_URL="https://github.com/ParisNeo/LollmsEnv/archive/refs/tags/V1.0.tar.gz"
+RELEASE_URL="https://github.com/ParisNeo/LollmsEnv/archive/refs/tags/V1.2.1.tar.gz"
 
 # Temporary directory for downloading and extraction
 TEMP_DIR="/tmp/lollmsenv_install"
