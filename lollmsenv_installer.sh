@@ -1,7 +1,9 @@
 #!/bin/bash
 
+VERSION="1.2.1"
+
 # URL of the latest release
-RELEASE_URL="https://github.com/ParisNeo/LollmsEnv/archive/refs/tags/V1.2.1.tar.gz"
+RELEASE_URL="https://github.com/ParisNeo/LollmsEnv/archive/refs/tags/V${VERSION}.tar.gz"
 
 # Temporary directory for downloading and extraction
 TEMP_DIR="/tmp/lollmsenv_install"
@@ -10,7 +12,7 @@ TEMP_DIR="/tmp/lollmsenv_install"
 mkdir -p "$TEMP_DIR"
 
 # Download the latest release
-echo "Downloading LollmsEnv..."
+echo "Downloading LollmsEnv version ${VERSION}..."
 curl -L "$RELEASE_URL" -o "$TEMP_DIR/lollmsenv.tar.gz"
 
 # Extract the archive
