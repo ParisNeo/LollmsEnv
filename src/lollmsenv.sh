@@ -69,25 +69,30 @@ urlencode() {
     done
     echo "${encoded}"
 }
-
 get_python_url() {
     local VERSION=$1
     local PLATFORM=$(get_platform_info)
     local RELEASE_URL="https://api.github.com/repos/indygreg/python-build-standalone/releases"
     
-    local MAJOR_VERSION="${VERSION%%.*}"
-    local MINOR_VERSION="${VERSION#*.}"
-    MINOR_VERSION="${MINOR_VERSION%%.*}"
+    # Split the version into major, minor, and patch
+    IFS='.' read -r MAJOR_VERSION MINOR_VERSION PATCH_VERSION <<< "$VERSION"
+   
+    local VERSION_PATTERN="cpython-$MAJOR_VERSION\.$MINOR_VERSION"
+    if [ -n "$PATCH_VERSION" ]; then
+        VERSION_PATTERN="$VERSION_PATTERN\.$PATCH_VERSION"
+    else
+        VERSION_PATTERN="$VERSION_PATTERN\.[0-9]+"
+    fi
     
     local ASSET_INFO=$(curl -s "$RELEASE_URL" | 
-                       grep -oP "\"browser_download_url\": \"https://github.com/indygreg/python-build-standalone/releases/download/[^\"]+/cpython-${MAJOR_VERSION}\.${MINOR_VERSION}[^\"]*${PLATFORM}[^\"]*\.tar\.gz\"" | 
+                       grep -oP "\"browser_download_url\": \"https://github.com/indygreg/python-build-standalone/releases/download/[^\"]+/$VERSION_PATTERN[^\"]+${PLATFORM}[^\"]*\.tar\.gz\"" | 
                        sort -V | 
                        tail -n 1 | 
                        sed 's/"browser_download_url": "//' | 
                        sed 's/"//')
     
     if [ -z "$ASSET_INFO" ]; then
-        log "No compatible Python version found for $VERSION"
+        log "No compatible Python version found for $MAJOR_VERSION.$MINOR_VERSION${PATCH_VERSION:+.$PATCH_VERSION} on $PLATFORM"
         return 1
     fi
     
@@ -96,6 +101,8 @@ get_python_url() {
     
     echo "$ENCODED_URL"
 }
+
+
 
 
 
