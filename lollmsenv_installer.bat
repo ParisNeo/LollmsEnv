@@ -14,6 +14,10 @@ if not exist "%TEMP_DIR%" mkdir "%TEMP_DIR%"
 :: Download the latest release
 echo Downloading LollmsEnv version %VERSION%...
 powershell -Command "Invoke-WebRequest -Uri '%RELEASE_URL%' -OutFile '%TEMP_DIR%\lollmsenv.zip'"
+if %errorlevel% neq 0 (
+    echo Error downloading LollmsEnv: %errorlevel%
+    exit /b 1
+)
 
 :: Extract the archive
 echo Extracting files...
