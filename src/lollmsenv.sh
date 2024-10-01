@@ -216,20 +216,25 @@ create_env() {
     log "Environment '$ENV_NAME' created successfully"
 }
 activate_env() {
-    local ENV_NAME=$1
-    local ENV_PATH=$(grep "^$ENV_NAME:" "$ENVS_DIR/installed_envs.txt" | cut -d':' -f2)
-    
-    if [ -z "$ENV_PATH" ]; then
-        error "Environment '$ENV_NAME' not found"
+    env_name=$1
+    env_path="$LOLLMS_HOME/envs/$env_name"
+    echo "$env_path"
+    if [ -d "$env_path" ]; then
+        echo "[$(date +'%Y-%m-%d %H:%M:%S')] Activating environment '$env_name'"
+        source "$env_path/bin/activate"
+        echo "[$(date +'%Y-%m-%d %H:%M:%S')] Environment '$env_name' activated"
+    else
+        echo "[$(date +'%Y-%m-%d %H:%M:%S')] Error: Environment '$env_name' does not exist"
     fi
-    
-    local ACTIVATE_SCRIPT="$ENV_PATH/bin/activate"
-    echo "To activate the environment, run:"
-    echo "source $ACTIVATE_SCRIPT"
 }
 deactivate_env() {
-    echo "To deactivate the current environment, run:"
-    echo "deactivate"
+    if [ -n "$VIRTUAL_ENV" ]; then
+        echo "[$(date +'%Y-%m-%d %H:%M:%S')] Deactivating current environment"
+        deactivate
+        echo "[$(date +'%Y-%m-%d %H:%M:%S')] Environment deactivated"
+    else
+        echo "[$(date +'%Y-%m-%d %H:%M:%S')] No active virtual environment to deactivate"
+    fi
 }
 install_package() {
     local PACKAGE=$1
