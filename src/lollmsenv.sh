@@ -47,18 +47,59 @@ list_available_pythons() {
     local RELEASE_URL="https://api.github.com/repos/indygreg/python-build-standalone/releases"
     local PLATFORM=$(get_platform_info)
     log "Fetching available Python versions for $PLATFORM..."
-    curl -s "$RELEASE_URL" | grep -oP "cpython-\d+\.\d+\.\d+\+\d+.${PLATFORM}.\.tar\.gz" | sed 's/cpython-//;s/+.*$//' | sort -u -V
+    
+    curl -s "$RELEASE_URL" | 
+    grep -oP "cpython-\d+\.\d+\.\d+" | 
+    sed 's/cpython-//' | 
+    sort -u -V
 }
+urlencode() {
+    local string="${1}"
+    local strlen=${#string}
+    local encoded=""
+    local pos c o
+
+    for (( pos=0 ; pos<strlen ; pos++ )); do
+        c=${string:$pos:1}
+        case "$c" in
+            [-_.~a-zA-Z0-9] ) o="${c}" ;;
+            * )               printf -v o '%%%02x' "'$c"
+        esac
+        encoded+="${o}"
+    done
+    echo "${encoded}"
+}
+
 get_python_url() {
     local VERSION=$1
     local PLATFORM=$(get_platform_info)
     local RELEASE_URL="https://api.github.com/repos/indygreg/python-build-standalone/releases"
     
-    local ASSET_NAME="cpython-${VERSION}+.${PLATFORM}.\.tar\.gz"
+    local MAJOR_VERSION="${VERSION%%.*}"
+    local MINOR_VERSION="${VERSION#*.}"
+    MINOR_VERSION="${MINOR_VERSION%%.*}"
     
-    local URL=$(curl -s "$RELEASE_URL" | grep -oP "https://github.com/indygreg/python-build-standalone/releases/download/[^\"]*${ASSET_NAME}" | head -n 1)
-    echo "$URL"
+    local ASSET_INFO=$(curl -s "$RELEASE_URL" | 
+                       grep -oP "\"browser_download_url\": \"https://github.com/indygreg/python-build-standalone/releases/download/[^\"]+/cpython-${MAJOR_VERSION}\.${MINOR_VERSION}[^\"]*${PLATFORM}[^\"]*\.tar\.gz\"" | 
+                       sort -V | 
+                       tail -n 1 | 
+                       sed 's/"browser_download_url": "//' | 
+                       sed 's/"//')
+    
+    if [ -z "$ASSET_INFO" ]; then
+        log "No compatible Python version found for $VERSION"
+        return 1
+    fi
+    
+    # URL encode the asset info
+    ENCODED_URL=$(urlencode "$ASSET_INFO")
+    
+    echo "$ENCODED_URL"
 }
+
+
+
+
 scan_for_python() {
     local VERSION=$1
     local LOCATIONS=(
@@ -76,61 +117,81 @@ scan_for_python() {
     done
     return 1
 }
+
+urldecode() {
+    local url_encoded="${1//+/ }"
+    printf '%b' "${url_encoded//%/\\x}"
+}
+
 install_python() {
     local VERSION=$1
     local CUSTOM_DIR=$2
     
-    # First, scan for existing Python installation
-    local EXISTING_PYTHON=$(scan_for_python "$VERSION")
+    # Additional debugging information
+    log "Python Dir: $PYTHON_DIR"
+    log "Temp Dir: $TEMP_DIR"
+    log "Current user: $(whoami)"
+    log "Current directory: $(pwd)"
     
-    if [ -n "$EXISTING_PYTHON" ]; then
-        log "Found existing Python $VERSION installation at $EXISTING_PYTHON"
-        
-        if [ -z "$CUSTOM_DIR" ]; then
-            TARGET_DIR="$PYTHON_DIR/$VERSION"
-        else
-            TARGET_DIR="$CUSTOM_DIR/$VERSION"
-        fi
-        
-        mkdir -p "$TARGET_DIR"
-        ln -s "$EXISTING_PYTHON" "$TARGET_DIR/bin/python3"
-        ln -s "$(dirname "$EXISTING_PYTHON")/pip$VERSION" "$TARGET_DIR/bin/pip" 2>/dev/null || true
-        
-        log "Created symlinks to existing Python $VERSION in $TARGET_DIR"
-        echo "$VERSION:$TARGET_DIR" >> "$PYTHON_DIR/installed_pythons.txt"
-        return 0
+    # Ensure required variables are set
+    [ -z "$PYTHON_DIR" ] && error "PYTHON_DIR is not set"
+    [ -z "$TEMP_DIR" ] && error "TEMP_DIR is not set"
+    
+    # Check if TEMP_DIR is writable
+    if [ ! -w "$TEMP_DIR" ]; then
+        error "TEMP_DIR ($TEMP_DIR) is not writable. Please check permissions."
     fi
     
-    local URL=$(get_python_url "$VERSION")
+    local ENCODED_URL=$(get_python_url "$VERSION")
+
+    echo "$ENCODED_URL"
     
-    if [ -z "$URL" ]; then
+    if [ -z "$ENCODED_URL" ]; then
         error "Failed to find Python $VERSION download URL"
     fi
     
+    local URL=$(urldecode "$ENCODED_URL")
     log "Downloading Python $VERSION from $URL"
     
-    if [ -z "$CUSTOM_DIR" ]; then
-        TARGET_DIR="$PYTHON_DIR/$VERSION"
-    else
-        TARGET_DIR="$CUSTOM_DIR/$VERSION"
+    # Extract the actual version from the URL
+    local ACTUAL_VERSION=$(echo "$URL" | grep -oP "cpython-\K[0-9]+\.[0-9]+\.[0-9]+")
+    log "Actual version available: $ACTUAL_VERSION"
+    
+    TARGET_DIR="${CUSTOM_DIR:-$PYTHON_DIR}/$ACTUAL_VERSION"
+    
+    if [ -d "$TARGET_DIR" ]; then
+        log "Target directory $TARGET_DIR already exists. Skipping installation."
+        return 0
     fi
     
-    mkdir -p "$TARGET_DIR"
+    mkdir -p "$TARGET_DIR" || error "Failed to create directory $TARGET_DIR"
     
-    local ARCHIVE="$TEMP_DIR/python-$VERSION.tar.gz"
-    curl -L -o "$ARCHIVE" "$URL" || error "Failed to download Python $VERSION"
+    local ARCHIVE="$TEMP_DIR/python-$ACTUAL_VERSION.tar.gz"
+    log "Attempting to download to: $ARCHIVE"
     
-    log "Extracting Python $VERSION to $TARGET_DIR"
-    tar -xzf "$ARCHIVE" -C "$TARGET_DIR" --strip-components=1 || error "Failed to extract Python $VERSION"
+    wget --no-check-certificate -q --show-progress --progress=bar:force:noscroll "$URL" -O "$ARCHIVE" || {
+        log "Wget failed. Trying curl..."
+        curl -L "$URL" -o "$ARCHIVE" || error "Both wget and curl failed to download Python $ACTUAL_VERSION"
+    }
+    
+    log "Extracting Python $ACTUAL_VERSION to $TARGET_DIR"
+    tar -xzf "$ARCHIVE" -C "$TARGET_DIR" --strip-components=1 || error "Failed to extract Python $ACTUAL_VERSION"
+    
+    if [ ! -f "$TARGET_DIR/bin/python3" ]; then
+        error "Python binary not found after extraction. Installation failed."
+    fi
     
     log "Ensuring pip and venv are installed"
     "$TARGET_DIR/bin/python3" -m ensurepip --upgrade || error "Failed to ensure pip is installed"
     "$TARGET_DIR/bin/python3" -m pip install --upgrade pip || error "Failed to upgrade pip"
     "$TARGET_DIR/bin/python3" -m pip install virtualenv || error "Failed to install virtualenv"
     
-    echo "$VERSION:$TARGET_DIR" >> "$PYTHON_DIR/installed_pythons.txt"
-    log "Python $VERSION installed successfully with pip and venv in $TARGET_DIR"
+    echo "$ACTUAL_VERSION:$TARGET_DIR" >> "$PYTHON_DIR/installed_pythons.txt"
+    log "Python $ACTUAL_VERSION installed successfully with pip and venv in $TARGET_DIR"
 }
+
+
+
 create_env() {
     local ENV_NAME=$1
     local PYTHON_VERSION=$2
