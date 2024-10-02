@@ -5,73 +5,121 @@
 ![GitHub forks](https://img.shields.io/github/forks/ParisNeo/LollmsEnv)
 ![GitHub issues](https://img.shields.io/github/issues/ParisNeo/LollmsEnv)
 
-LollmsEnv is a lightweight environment management tool for Lollms projects. It allows you to install multiple Python versions, create and manage virtual environments, and install packages without requiring a pre-existing Python installation.
+LollmsEnv is a lightweight and simple tool for managing Python environments and versions. It provides an easy-to-use interface for installing multiple Python versions, creating and managing virtual environments, and bundling Python installations with environments.
+
+## Table of Contents
+
+1. [Features](#features)
+2. [Installation](#installation)
+3. [Usage](#usage)
+4. [Commands](#commands)
+5. [Examples](#examples)
+6. [License](#license)
+7. [Acknowledgments](#acknowledgments)
+
 ## Features
+
 - Install and manage multiple Python versions
 - Create and manage virtual environments
-- Install and upgrade packages
-- Export and import requirements
-- Works without administrative privileges
+- Create bundles of Python installations with environments
+- Cross-platform support (Windows and Unix-based systems)
+- Lightweight and easy to use
+- Supports custom installation directories
+
 ## Installation
 
 ### Windows
-1. Clone this repository:
-   ```
-   git clone https://github.com/ParisNeo/LollmsEnv.git
-   ```
-2. Navigate to the LollmsEnv directory and run:
-   - For global installation: `install.bat`
-   - For local installation: `install.bat --local`
 
-### Unix-like systems (Linux, macOS)
-1. Clone this repository:
+1. Download the installer:
+   [lollmsenv_installer.bat](https://github.com/ParisNeo/LollmsEnv/releases/download/V1.2.4/lollmsenv_installer.bat)
+
+2. Run the installer:
    ```
-   git clone https://github.com/ParisNeo/LollmsEnv.git
+   lollmsenv_installer.bat [options]
    ```
-2. Navigate to the LollmsEnv directory.
-3. Run `chmod +x install.sh` to make the install script executable.
-4. Run:
-   - For global installation: `./install.sh`
-   - For local installation: `./install.sh --local`
+
+### Unix-based systems (Linux, macOS)
+
+1. Download the installer:
+   [lollmsenv_installer.sh](https://github.com/ParisNeo/LollmsEnv/releases/download/V1.2.4/lollmsenv_installer.sh)
+
+2. Make the installer executable:
+   ```
+   chmod +x lollmsenv_installer.sh
+   ```
+
+3. Run the installer:
+   ```
+   ./lollmsenv_installer.sh [options]
+   ```
+
+### Installation Options
+
+- `--local`: Install LollmsEnv locally in the current directory.
+- `--dir <directory>`: Install LollmsEnv in the specified directory.
+- `--no-modify-rc`: Do not modify .bashrc or .zshrc (Unix) or system PATH (Windows). Generate a source script instead.
+- `-h, --help`: Show help message and exit.
 
 ## Usage
 
-1. After installation:
-   - For global installation: Restart your terminal or command prompt.
-   - For local installation: Run `activate.bat` (Windows) or `source activate.sh` (Unix-like systems) in the installation directory.
+After installation, you can use the `lollmsenv` command to manage Python versions and environments.
 
-2. Now you can use LollmsEnv commands. See [usage.md](docs/usage.md) for detailed usage instructions.
+For Windows:
+```
+lollmsenv.bat [command] [options]
+```
 
-For detailed usage instructions, see docs/usage.md
+For Unix-based systems:
+```
+lollmsenv [command] [options]
+```
+
 ## Commands
-- install-python [version]: Install a specific Python version
-- create-env [name] [python-version]: Create a new virtual environment
-- activate [name]: Activate a virtual environment
-- deactivate: Deactivate the current virtual environment
-- install [package]: Install a package in the current environment
-- list-packages: List installed packages
-- upgrade-package [package]: Upgrade a package
-- export-requirements [file]: Export environment requirements
-- import-requirements [file]: Import environment requirements
-- uninstall-python [version]: Uninstall a Python version
-- remove-env [name]: Remove a virtual environment
-- update-tool: Update LollmsEnv
-- list-pythons: List installed Python versions
-- list-envs: List available environments
+
+- `install-python [version] [custom_dir]`: Install a specific Python version
+- `create-env [name] [python-version] [custom_dir]`: Create a new virtual environment
+- `activate [name]`: Activate an environment
+- `deactivate`: Deactivate the current environment
+- `install [package]`: Install a package in the current environment
+- `list-pythons`: List installed Python versions
+- `list-envs`: List installed virtual environments
+- `list-available-pythons`: List available Python versions for installation
+- `create-bundle [name] [python-version] [env-name]`: Create a bundle with Python and environment
+- `delete-env [name]`: Delete a virtual environment
+- `delete-python [version]`: Delete a Python installation
+- `--help, -h`: Show help message
+
+## Examples
+
+1. Install Python 3.9.5:
+   ```
+   lollmsenv install-python 3.9.5
+   ```
+
+2. Create a new environment named "myproject" with Python 3.9.5:
+   ```
+   lollmsenv create-env myproject 3.9.5
+   ```
+
+3. Activate the "myproject" environment:
+   ```
+   lollmsenv activate myproject
+   ```
+
+4. Install a package in the current environment:
+   ```
+   lollmsenv install numpy
+   ```
+
+5. Create a bundle with Python 3.9.5 and an environment named "mybundle":
+   ```
+   lollmsenv create-bundle mybundle 3.9.5 myenv
+   ```
+
 ## License
 
-This project is licensed under the Apache License, Version 2.0 - see the [LICENSE](LICENSE) file for details.
+This project is open source and available under the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0).
 
-## Contributing
+## Acknowledgments
 
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-## Support
-
-If you encounter any problems or have any questions, please open an issue in the [GitHub repository](https://github.com/ParisNeo/LollmsEnv/issues).
-
-## Credits
-LollmsEnv is built by ParisNeo using Lollms.
-
-![GitHub last commit](https://img.shields.io/github/last-commit/ParisNeo/LollmsEnv)
-![GitHub release (latest by date)](https://img.shields.io/github/v/release/ParisNeo/LollmsEnv)
+LollmsEnv was created by ParisNeo and is hosted on GitHub at [https://github.com/ParisNeo/LollmsEnv](https://github.com/ParisNeo/LollmsEnv).
