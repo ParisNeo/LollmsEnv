@@ -1,141 +1,141 @@
 # LollmsEnv
 
-![GitHub license](https://img.shields.io/github/license/ParisNeo/LollmsEnv)
-![GitHub stars](https://img.shields.io/github/stars/ParisNeo/LollmsEnv)
-![GitHub forks](https://img.shields.io/github/forks/ParisNeo/LollmsEnv)
-![GitHub issues](https://img.shields.io/github/issues/ParisNeo/LollmsEnv)
+![Licence GitHub](https://img.shields.io/github/license/ParisNeo/LollmsEnv)
+![Étoiles GitHub](https://img.shields.io/github/stars/ParisNeo/LollmsEnv)
+![Forks GitHub](https://img.shields.io/github/forks/ParisNeo/LollmsEnv)
+![Problèmes GitHub](https://img.shields.io/github/issues/ParisNeo/LollmsEnv)
 
-LollmsEnv is a lightweight and simple tool for managing Python environments and versions. It provides an easy-to-use interface for installing multiple Python versions, creating and managing virtual environments, and bundling Python installations with environments.
+LollmsEnv est un outil léger et simple pour gérer les environnements et les versions Python. Il fournit une interface facile à utiliser pour installer plusieurs versions de Python, créer et gérer des environnements virtuels, et regrouper des installations Python avec des environnements.
 
-## Table of Contents
+## Table des matières
 
-1. [Features](#features)
+1. [Fonctionnalités](#fonctionnalités)
 2. [Installation](#installation)
-3. [Usage](#usage)
-4. [Commands](#commands)
-5. [Examples](#examples)
-6. [License](#license)
-7. [Acknowledgments](#acknowledgments)
+3. [Utilisation](#utilisation)
+4. [Commandes](#commandes)
+5. [Exemples](#exemples)
+6. [Licence](#licence)
+7. [Remerciements](#remerciements)
 
-## Features
+## Fonctionnalités
 
-- Install and manage multiple Python versions
-- Create and manage virtual environments
-- Create bundles of Python installations with environments
-- Cross-platform support (Windows and Unix-based systems)
-- Lightweight and easy to use
-- Supports custom installation directories
+- Installer et gérer plusieurs versions de Python
+- Créer et gérer des environnements virtuels
+- Créer des regroupements d'installations Python avec des environnements
+- Support multiplateforme (Windows et systèmes basés sur Unix)
+- Léger et facile à utiliser
+- Prend en charge les répertoires d'installation personnalisés
 
 ## Installation
 
 ### Windows
 
-1. Download the installer:
+1. Téléchargez l'installateur :
    [lollmsenv_installer.bat](https://github.com/ParisNeo/LollmsEnv/releases/download/V1.2.4/lollmsenv_installer.bat)
 
-2. Run the installer:
+2. Exécutez l'installateur :
    ```
    lollmsenv_installer.bat [options]
    ```
 
-### Unix-based systems (Linux, macOS)
+### Systèmes basés sur Unix (Linux, macOS)
 
-1. Download the installer:
+1. Téléchargez l'installateur :
    [lollmsenv_installer.sh](https://github.com/ParisNeo/LollmsEnv/releases/download/V1.2.4/lollmsenv_installer.sh)
 
-2. Make the installer executable:
+2. Rendez l'installateur exécutable :
    ```
    chmod +x lollmsenv_installer.sh
    ```
 
-3. Run the installer:
+3. Exécutez l'installateur :
    ```
    ./lollmsenv_installer.sh [options]
    ```
 
-### Installation Options
+### Options d'installation
 
-- `--local`: Install LollmsEnv locally in the current directory.
-- `--dir <directory>`: Install LollmsEnv in the specified directory.
-- `--no-modify-rc`: Do not modify .bashrc or .zshrc (Unix) or system PATH (Windows). Generate a source script instead.
-- `-h, --help`: Show help message and exit.
+- `--local` : Installer LollmsEnv localement dans le répertoire actuel.
+- `--dir <répertoire>` : Installer LollmsEnv dans le répertoire spécifié.
+- `--no-modify-rc` : Ne pas modifier .bashrc ou .zshrc (Unix) ou le PATH système (Windows). Générer un script source à la place.
+- `-h, --help` : Afficher le message d'aide et quitter.
 
-## Usage
+## Utilisation
 
-After installation, you can use the `lollmsenv` command to manage Python versions and environments.
+Après l'installation, vous pouvez utiliser la commande `lollmsenv` pour gérer les versions et les environnements Python.
 
-For Windows:
+Pour Windows :
 ```
-lollmsenv.bat [command] [options]
-```
-
-For Unix-based systems:
-```
-[source] lollmsenv [command] [options]
+lollmsenv.bat [commande] [options]
 ```
 
-If you did not accept adding lollmsenv to your Path (`--no-modify-rc`), make sure you start by activating the tool before usage:
+Pour les systèmes basés sur Unix :
+```
+[source] lollmsenv [commande] [options]
+```
+
+Si vous n'avez pas accepté d'ajouter lollmsenv à votre Path (`--no-modify-rc`), assurez-vous de commencer par activer l'outil avant utilisation :
 Windows
 ```
-path/to/your/lollmsenv activate
+chemin/vers/votre/lollmsenv activate
 ```
 
 Linux
 ```
-source path/to/your/lollmsenv activate 
+source chemin/vers/votre/lollmsenv activate 
 ```
 
-## Commands
+## Commandes
 
-- `install-python [version] [custom_dir]`: Install a specific Python version
-- `create-env [name] [python-version] [custom_dir]`: Create a new virtual environment
-- `activate [name]`: Activate an environment
-- `deactivate`: Deactivate the current environment
-- `install [package]`: Install a package in the current environment
-- `list-pythons`: List installed Python versions
-- `list-envs`: List installed virtual environments
-- `list-available-pythons`: List available Python versions for installation
-- `create-bundle [name] [python-version] [env-name]`: Create a bundle with Python and environment
-- `delete-env [name]`: Delete a virtual environment
-- `delete-python [version]`: Delete a Python installation
-- `--help, -h`: Show help message
+- `install-python [version] [répertoire_personnalisé]` : Installer une version spécifique de Python
+- `create-env [nom] [version-python] [répertoire_personnalisé]` : Créer un nouvel environnement virtuel
+- `activate [nom]` : Activer un environnement
+- `deactivate` : Désactiver l'environnement actuel
+- `install [package]` : Installer un package dans l'environnement actuel
+- `list-pythons` : Lister les versions Python installées
+- `list-envs` : Lister les environnements virtuels installés
+- `list-available-pythons` : Lister les versions Python disponibles pour l'installation
+- `create-bundle [nom] [version-python] [nom-env]` : Créer un regroupement avec Python et environnement
+- `delete-env [nom]` : Supprimer un environnement virtuel
+- `delete-python [version]` : Supprimer une installation Python
+- `--help, -h` : Afficher le message d'aide
 
-## Examples
+## Exemples
 
-1. Install Python 3.9.5:
+1. Installer Python 3.9.5 :
    ```
    lollmsenv install-python 3.9.5
    ```
 
-2. Create a new environment named "myproject" with Python 3.9.5:
+2. Créer un nouvel environnement nommé "monprojet" avec Python 3.9.5 :
    ```
-   lollmsenv create-env myproject 3.9.5
-   ```
-
-3. Activate the "myproject" environment:
-   Windowe:
-   ```
-   lollmsenv activate myproject
-   ```
-   Linux:
-   ```
-   source lollmsenv activate myproject
+   lollmsenv create-env monprojet 3.9.5
    ```
 
-5. Install a package in the current environment:
+3. Activer l'environnement "monprojet" :
+   Windows :
+   ```
+   lollmsenv activate monprojet
+   ```
+   Linux :
+   ```
+   source lollmsenv activate monprojet
+   ```
+
+5. Installer un package dans l'environnement actuel :
    ```
    lollmsenv install numpy
    ```
 
-6. Create a bundle with Python 3.9.5 and an environment named "mybundle":
+6. Créer un regroupement avec Python 3.9.5 et un environnement nommé "monregroupement" :
    ```
-   lollmsenv create-bundle mybundle 3.9.5 myenv
+   lollmsenv create-bundle monregroupement 3.9.5 monenv
    ```
 
-## License
+## Licence
 
-This project is open source and available under the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0).
+Ce projet est open source et disponible sous la [Licence Apache 2.0](https://www.apache.org/licenses/LICENSE-2.0).
 
-## Acknowledgments
+## Remerciements
 
-LollmsEnv was created by ParisNeo and is hosted on GitHub at [https://github.com/ParisNeo/LollmsEnv](https://github.com/ParisNeo/LollmsEnv).
+LollmsEnv a été créé par ParisNeo et est hébergé sur GitHub à l'adresse [https://github.com/ParisNeo/LollmsEnv](https://github.com/ParisNeo/LollmsEnv).
