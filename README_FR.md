@@ -1,101 +1,141 @@
 # LollmsEnv
 
-LollmsEnv est un outil léger et simple pour gérer les environnements et versions Python.
+![GitHub license](https://img.shields.io/github/license/ParisNeo/LollmsEnv)
+![GitHub stars](https://img.shields.io/github/stars/ParisNeo/LollmsEnv)
+![GitHub forks](https://img.shields.io/github/forks/ParisNeo/LollmsEnv)
+![GitHub issues](https://img.shields.io/github/issues/ParisNeo/LollmsEnv)
 
-## Résumé
+LollmsEnv is a lightweight and simple tool for managing Python environments and versions. It provides an easy-to-use interface for installing multiple Python versions, creating and managing virtual environments, and bundling Python installations with environments.
 
-LollmsEnv est conçu pour simplifier la gestion des installations Python et des environnements virtuels. Il permet d'installer plusieurs versions de Python, de créer et gérer des environnements virtuels, et de créer des bundles contenant une version spécifique de Python avec un environnement dédié.
+## Table of Contents
 
-## Fonctionnalités principales
+1. [Features](#features)
+2. [Installation](#installation)
+3. [Usage](#usage)
+4. [Commands](#commands)
+5. [Examples](#examples)
+6. [License](#license)
+7. [Acknowledgments](#acknowledgments)
 
-- Installation de versions spécifiques de Python
-- Création et gestion d'environnements virtuels
-- Création de bundles (Python + environnement)
-- Gestion des packages dans les environnements
-- Listing des versions Python et environnements installés
-- Suppression d'environnements et d'installations Python
+## Features
+
+- Install and manage multiple Python versions
+- Create and manage virtual environments
+- Create bundles of Python installations with environments
+- Cross-platform support (Windows and Unix-based systems)
+- Lightweight and easy to use
+- Supports custom installation directories
 
 ## Installation
 
 ### Windows
 
-Téléchargez le fichier d'installation :
-[lollmsenv_installer.bat](https://github.com/ParisNeo/LollmsEnv/releases/download/V1.2.4/lollmsenv_installer.bat)
+1. Download the installer:
+   [lollmsenv_installer.bat](https://github.com/ParisNeo/LollmsEnv/releases/download/V1.2.4/lollmsenv_installer.bat)
 
-Exécutez le fichier téléchargé pour installer LollmsEnv.
+2. Run the installer:
+   ```
+   lollmsenv_installer.bat [options]
+   ```
 
-### Linux/macOS
+### Unix-based systems (Linux, macOS)
 
-Téléchargez le script d'installation :
-[lollmsenv_installer.sh](https://github.com/ParisNeo/LollmsEnv/releases/download/V1.2.4/lollmsenv_installer.sh)
+1. Download the installer:
+   [lollmsenv_installer.sh](https://github.com/ParisNeo/LollmsEnv/releases/download/V1.2.4/lollmsenv_installer.sh)
 
-Rendez le script exécutable et lancez-le :
+2. Make the installer executable:
+   ```
+   chmod +x lollmsenv_installer.sh
+   ```
 
-```bash
-chmod +x lollmsenv_installer.sh
-./lollmsenv_installer.sh
+3. Run the installer:
+   ```
+   ./lollmsenv_installer.sh [options]
+   ```
+
+### Installation Options
+
+- `--local`: Install LollmsEnv locally in the current directory.
+- `--dir <directory>`: Install LollmsEnv in the specified directory.
+- `--no-modify-rc`: Do not modify .bashrc or .zshrc (Unix) or system PATH (Windows). Generate a source script instead.
+- `-h, --help`: Show help message and exit.
+
+## Usage
+
+After installation, you can use the `lollmsenv` command to manage Python versions and environments.
+
+For Windows:
+```
+lollmsenv.bat [command] [options]
 ```
 
-## Utilisation
-
-Après l'installation, vous pouvez utiliser LollmsEnv via la ligne de commande :
-
-```bash
-lollmsenv [commande] [options]
+For Unix-based systems:
+```
+[source] lollmsenv [command] [options]
 ```
 
-### Commandes principales
+If you did not accept adding lollmsenv to your Path (`--no-modify-rc`), make sure you start by activating the tool before usage:
+Windows
+```
+path/to/your/lollmsenv activate
+```
 
-- `install-python [version] [dossier_personnalisé]` : Installe une version spécifique de Python
-- `create-env [nom] [version-python] [dossier_personnalisé]` : Crée un nouvel environnement virtuel
-- `activate [nom]` : Active un environnement
-- `deactivate` : Désactive l'environnement actuel
-- `install [package]` : Installe un package dans l'environnement actuel
-- `list-pythons` : Liste les versions Python installées
-- `list-envs` : Liste les environnements virtuels installés
-- `create-bundle [nom] [version-python] [nom-env]` : Crée un bundle avec Python et un environnement
-- `delete-env [nom]` : Supprime un environnement virtuel
-- `delete-python [version]` : Supprime une installation Python
+Linux
+```
+source path/to/your/lollmsenv activate 
+```
 
-Pour une liste complète des commandes, utilisez `lollmsenv --help`.
+## Commands
 
-## Exemples d'utilisation
+- `install-python [version] [custom_dir]`: Install a specific Python version
+- `create-env [name] [python-version] [custom_dir]`: Create a new virtual environment
+- `activate [name]`: Activate an environment
+- `deactivate`: Deactivate the current environment
+- `install [package]`: Install a package in the current environment
+- `list-pythons`: List installed Python versions
+- `list-envs`: List installed virtual environments
+- `list-available-pythons`: List available Python versions for installation
+- `create-bundle [name] [python-version] [env-name]`: Create a bundle with Python and environment
+- `delete-env [name]`: Delete a virtual environment
+- `delete-python [version]`: Delete a Python installation
+- `--help, -h`: Show help message
 
-1. Installer Python 3.9.5 :
+## Examples
+
+1. Install Python 3.9.5:
    ```
    lollmsenv install-python 3.9.5
    ```
 
-2. Créer un environnement virtuel avec Python 3.9.5 :
+2. Create a new environment named "myproject" with Python 3.9.5:
    ```
-   lollmsenv create-env mon_env 3.9.5
-   ```
-
-3. Activer l'environnement :
-   ```
-   lollmsenv activate mon_env
+   lollmsenv create-env myproject 3.9.5
    ```
 
-4. Installer un package dans l'environnement actif :
+3. Activate the "myproject" environment:
+   Windowe:
+   ```
+   lollmsenv activate myproject
+   ```
+   Linux:
+   ```
+   source lollmsenv activate myproject
+   ```
+
+5. Install a package in the current environment:
    ```
    lollmsenv install numpy
    ```
 
-5. Créer un bundle :
+6. Create a bundle with Python 3.9.5 and an environment named "mybundle":
    ```
-   lollmsenv create-bundle mon_bundle 3.9.5 mon_env
+   lollmsenv create-bundle mybundle 3.9.5 myenv
    ```
 
-## Licence
+## License
 
-Ce projet est sous licence Apache 2.0. Voir le fichier [LICENSE](LICENSE) pour plus de détails.
+This project is open source and available under the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0).
 
-## Auteur
+## Acknowledgments
 
-Développé par ParisNeo.
-
-## Liens
-
-- [Dépôt GitHub](https://github.com/ParisNeo/LollmsEnv)
-- [Signaler un problème](https://github.com/ParisNeo/LollmsEnv/issues)
-
+LollmsEnv was created by ParisNeo and is hosted on GitHub at [https://github.com/ParisNeo/LollmsEnv](https://github.com/ParisNeo/LollmsEnv).
