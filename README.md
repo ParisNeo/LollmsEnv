@@ -71,7 +71,18 @@ lollmsenv.bat [command] [options]
 
 For Unix-based systems:
 ```
-lollmsenv [command] [options]
+[source] lollmsenv [command] [options]
+```
+
+If you did not accept adding lollmsenv to your Path (`--no-modify-rc`), make sure you start by activating the tool before usage:
+Windows
+```
+path/to/your/lollmsenv activate
+```
+
+Linux
+```
+source path/to/your/lollmsenv activate 
 ```
 
 ## Commands
@@ -102,16 +113,21 @@ lollmsenv [command] [options]
    ```
 
 3. Activate the "myproject" environment:
+   Windowe:
    ```
    lollmsenv activate myproject
    ```
+   Linux:
+   ```
+   source lollmsenv activate myproject
+   ```
 
-4. Install a package in the current environment:
+5. Install a package in the current environment:
    ```
    lollmsenv install numpy
    ```
 
-5. Create a bundle with Python 3.9.5 and an environment named "mybundle":
+6. Create a bundle with Python 3.9.5 and an environment named "mybundle":
    ```
    lollmsenv create-bundle mybundle 3.9.5 myenv
    ```
