@@ -57,9 +57,28 @@ cp src/lollmsenv.sh "$SCRIPT_DIR/lollmsenv"
 chmod +x "$SCRIPT_DIR/lollmsenv"
 cp activate.sh "$INSTALL_DIR"
 chmod +x "$INSTALL_DIR/activate.sh"
+# Define the delimiter
+DELIMITER="# BEGIN LOLLMS ENV"
+END_DELIMITER="# END LOLLMS ENV"
+# Function to add the source line to RC files
+add_to_rc_file() {
+    local rc_file="$1"
+    if ! grep -q "$DELIMITER" "$rc_file"; then
+        echo "" >> "$rc_file"
+        echo "$DELIMITER" >> "$rc_file"
+        echo 'source $HOME/.lollmsenv/activate.sh' >> "$rc_file"
+        echo "$END_DELIMITER" >> "$rc_file"
+        echo "Added LollmsEnv to $rc_file"
+    else
+        echo "LollmsEnv already exists in $rc_file"
+    fi
+}
+
 if [ "$LOCAL_INSTALL" -eq 0 ] && [ "$NO_MODIFY_RC" -eq 0 ]; then
-    echo 'export PATH="$PATH:$HOME/.lollmsenv/bin"' >> "$HOME/.bashrc"
-    echo 'export PATH="$PATH:$HOME/.lollmsenv/bin"' >> "$HOME/.zshrc"
+    # Add to .bashrc
+    add_to_rc_file "$HOME/.bashrc"
+    # Add to .zshrc
+    add_to_rc_file "$HOME/.zshrc"
     echo "LollmsEnv has been installed globally. Please restart your terminal or run 'source ~/.bashrc' (or ~/.zshrc) to use it."
 else
     echo "LollmsEnv has been installed in: $INSTALL_DIR"
@@ -69,5 +88,28 @@ else
         echo 'export PATH="$PATH:'"$SCRIPT_DIR"'"' >> "$INSTALL_DIR/source.sh"
         chmod +x "$INSTALL_DIR/source.sh"
         echo "A source.sh script has been generated. Run 'source $INSTALL_DIR/source.sh' to use LollmsEnv."
+    else
+        # Function to add the source line to RC files
+        add_1_to_rc_file() {
+            local rc_file="$1"
+            if ! grep -q "$DELIMITER" "$rc_file"; then
+                echo "" >> "$rc_file"
+                echo "$DELIMITER" >> "$rc_file"
+                echo "source $INSTALL_DIR/activate.sh" >> "$rc_file"
+                echo "$END_DELIMITER" >> "$rc_file"
+                echo "Added LollmsEnv to $rc_file"
+            else
+                echo "LollmsEnv already exists in $rc_file"
+            fi
+        }
+    
+        # Add to .bashrc
+        add_1_to_rc_file "$HOME/.bashrc"
+    
+        # Add to .zshrc if it exists
+        if [ -f "$HOME/.zshrc" ]; then
+            add_1_to_rc_file "$HOME/.zshrc"
+        fi
     fi
 fi
+echo "Installation done"
