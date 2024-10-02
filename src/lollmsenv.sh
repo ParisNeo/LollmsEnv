@@ -3,7 +3,6 @@
 # Copyright (c) 2024 ParisNeo
 # Licensed under the Apache License, Version 2.0
 # Built by ParisNeo using Lollms
-set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"
 LOLLMS_HOME="$(dirname "$SCRIPT_DIR")"
 PYTHON_DIR="$LOLLMS_HOME/pythons"
@@ -22,7 +21,6 @@ cleanup() {
     log "Cleaning up temporary files..."
     rm -rf "$TEMP_DIR"
 }
-trap cleanup EXIT
 get_platform_info() {
     local OS=$(uname -s | tr '[:upper:]' '[:lower:]')
     local ARCH=$(uname -m)
