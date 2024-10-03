@@ -68,8 +68,20 @@ class LollmsEnvManager:
 
     @staticmethod
     def is_env_active(env_name):
-        result = LollmsEnvManager.run_lollmsenv_command(['current-env'])
-        return result == env_name if result else False
+        # Get the path of the Python interpreter
+        executable_path = Path(sys.executable)
+
+        # Check if we're in a virtual environment
+        if 'venv' in executable_path.parts or 'virtualenv' in executable_path.parts:
+            # We're in a virtual environment
+            venv_path = executable_path.parent.parent
+            active_venv_name = venv_path.name
+
+            # Check if the active venv matches the given env_name
+            return active_venv_name.lower() == env_name.lower()
+        else:
+            # We're not in a virtual environment
+            return False
 
 
     @staticmethod
