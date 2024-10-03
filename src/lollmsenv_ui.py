@@ -8,13 +8,14 @@ from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import Qt
 
 class LollmsEnvManager:
-    PYTHONS_FILE = Path("lollmsenv/pythons/installed_pythons.txt")
-    ENVS_FILE = Path("lollmsenv/envs/installed_envs.txt")
+    SCRIPT_DIR = Path(__file__).resolve().parent
+    PYTHONS_FILE = SCRIPT_DIR.parent / "pythons" / "installed_pythons.txt"
+    ENVS_FILE = SCRIPT_DIR.parent / "envs" / "installed_envs.txt"
 
     @staticmethod
     def run_lollmsenv_command(command):
         try:
-            result = subprocess.run(['lollmsenv/bin/lollmsenv.bat'] + command, capture_output=True, text=True, check=True)
+            result = subprocess.run(['lollmsenv.bat'] + command, capture_output=True, text=True, check=True)
             return result.stdout.strip()
         except subprocess.CalledProcessError as e:
             print(f"Error running command: {e}")
