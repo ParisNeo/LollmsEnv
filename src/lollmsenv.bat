@@ -122,6 +122,7 @@ echo %VERSION%,%PYTHON_PATH% >> "%PYTHON_DIR%\installed_pythons.txt"
 call :log Python %VERSION% registered successfully
 exit /b
 :create_env
+setlocal enabledelayedexpansion
 set "ENV_NAME=%~1"
 set "PYTHON_VERSION=%~2"
 set "CUSTOM_DIR=%~3"
@@ -136,7 +137,7 @@ if "%PYTHON_VERSION%"=="" (
 if "%PYTHON_VERSION%"=="" (
     call :log No Python versions found.
     set /p INSTALL_PYTHON="Do you want to install Python 3.11.9? (Y/N): "
-    if /i "%INSTALL_PYTHON%"=="Y" (
+    if /i "!INSTALL_PYTHON!"=="Y" (
         call :install_python 3.11.9
         set "PYTHON_VERSION=3.11.9"
     ) else (
@@ -151,18 +152,18 @@ for /f "tokens=1,2 delims=," %%a in ('findstr /b "%PYTHON_VERSION%," "%PYTHON_DI
     set "PYTHON_PATH=%%b"
     set "PYTHON_PATH=!PYTHON_PATH: =!"
 )
-echo Debug: Raw PYTHON_PATH = %PYTHON_PATH%
+echo Debug: Raw PYTHON_PATH = !PYTHON_PATH!
 if not defined PYTHON_PATH (
     call :error Python %PYTHON_VERSION% is not found in installed_pythons.txt
     exit /b 1
 )
 
-set "PYTHON_EXE=%PYTHON_PATH%\python.exe"
-set "PIP_EXE=%PYTHON_PATH%\Scripts\pip.exe"
-set "VIRTUALENV_EXE=%PYTHON_PATH%\Scripts\virtualenv.exe"
+set "PYTHON_EXE=!PYTHON_PATH!\python.exe"
+set "PIP_EXE=!PYTHON_PATH!\Scripts\pip.exe"
+set "VIRTUALENV_EXE=!PYTHON_PATH!\Scripts\virtualenv.exe"
 
-echo Debug: Checking if file exists: "%PYTHON_EXE%"
-if not exist "%PYTHON_EXE%" (
+echo Debug: Checking if file exists: "!PYTHON_EXE!"
+if not exist "!PYTHON_EXE!" (
     call :error Python %PYTHON_VERSION% is not installed or path is incorrect
     exit /b 1
 )
@@ -173,22 +174,23 @@ if "%CUSTOM_DIR%"=="" (
     set "ENV_PATH=%CUSTOM_DIR%\%ENV_NAME%"
 )
 
-call :log Creating virtual environment '%ENV_NAME%' with Python %PYTHON_VERSION% in %ENV_PATH%
-"%VIRTUALENV_EXE%" "%ENV_PATH%"
+call :log Creating virtual environment '%ENV_NAME%' with Python %PYTHON_VERSION% in !ENV_PATH!
+"!VIRTUALENV_EXE!" "!ENV_PATH!"
 if errorlevel 1 (
     call :error Failed to create virtual environment
     exit /b 1
 )
 
 call :log Upgrading pip in the new environment
-"%ENV_PATH%\Scripts\python.exe" -m pip install --upgrade pip
+"!ENV_PATH!\Scripts\python.exe" -m pip install --upgrade pip
 if errorlevel 1 (
     call :error Failed to upgrade pip in the new environment
     exit /b 1
 )
 
-echo %ENV_NAME%,%ENV_PATH%,%PYTHON_VERSION% >> "%ENVS_DIR%\installed_envs.txt"
+echo %ENV_NAME%,!ENV_PATH!,%PYTHON_VERSION% >> "%ENVS_DIR%\installed_envs.txt"
 call :log Environment '%ENV_NAME%' created successfully
+endlocal
 exit /b
 
 :activate_env
