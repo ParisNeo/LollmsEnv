@@ -30,7 +30,7 @@ class LollmsEnvUI(QMainWindow):
             QPushButton:hover {
                 background-color: #45a049;
             }
-        """
+        """)
 
         self.central_widget = QWidget()
         self.setCentralWidget(self.central_widget)
