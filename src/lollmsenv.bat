@@ -104,19 +104,33 @@ exit /b
 set "ENV_NAME=%~1"
 set "PYTHON_VERSION=%~2"
 set "CUSTOM_DIR=%~3"
-
+if "%PYTHON_VERSION%"=="" (
+    call :log No Python version specified, checking for default...
+    for /f "tokens=1,* delims=," %%a in ('type "%PYTHON_DIR%\installed_pythons.txt" ^| sort /r') do (
+        set "PYTHON_VERSION=%%a"
+        goto :found_default
+    )
+    :found_default
+)
+if "%PYTHON_VERSION%"=="" (
+    call :log No Python versions found.
+    set /p INSTALL_PYTHON="Do you want to install Python 3.11.9? (Y/N): "
+    if /i "%INSTALL_PYTHON%"=="Y" (
+        call :install_python 3.11.9
+        set "PYTHON_VERSION=3.11.9"
+    ) else (
+        call :error Cannot create environment without Python. Please install Python first.
+        exit /b 1
+    )
+)
 echo Debug: Contents of installed_pythons.txt:
 type "%PYTHON_DIR%\installed_pythons.txt"
-
 set "PYTHON_PATH="
 for /f "tokens=1,2 delims=," %%a in ('findstr /b "%PYTHON_VERSION%," "%PYTHON_DIR%\installed_pythons.txt"') do (
     set "PYTHON_PATH=%%b"
     set "PYTHON_PATH=!PYTHON_PATH: =!"
 )
-
-
 echo Debug: Raw PYTHON_PATH = %PYTHON_PATH%
-
 if not defined PYTHON_PATH (
     call :error Python %PYTHON_VERSION% is not found in installed_pythons.txt
     exit /b 1
