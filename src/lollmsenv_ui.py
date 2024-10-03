@@ -46,13 +46,30 @@ class LollmsEnvManager:
     def run_lollmsenv_command(command):
         try:
             logging.debug(f"Running command: lollmsenv.bat {' '.join(command)}")
-            result = subprocess.run(['lollmsenv.bat'] + command, capture_output=True, text=True, check=True)
-            logging.debug(f"Command output: {result.stdout}")
-            return result.stdout.strip()
-        except subprocess.CalledProcessError as e:
-            logging.error(f"Error running command: {e}")
-            logging.error(f"Error output: {e.stderr}")
+            
+            # Use shell=True for complex commands
+            full_command = f"lollmsenv.bat {' '.join(command)}"
+            process = subprocess.Popen(full_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, text=True)
+            
+            # Set a timeout (e.g., 30 seconds)
+            try:
+                stdout, stderr = process.communicate(timeout=30)
+            except subprocess.TimeoutExpired:
+                process.kill()
+                logging.error("Command timed out")
+                return None
+
+            if process.returncode != 0:
+                logging.error(f"Command failed with return code {process.returncode}")
+                logging.error(f"Error output: {stderr}")
+                return None
+
+            logging.debug(f"Command output: {stdout}")
+            return stdout.strip()
+        except Exception as e:
+            logging.error(f"Error running command: {str(e)}")
             return None
+
 
     @staticmethod
     def get_installed_pythons():
@@ -274,10 +291,23 @@ class PackagesView(QWidget):
         if current_env:
             env_name = current_env.text().split(':')[0]
             self.spinner.show()
-            self.worker = Worker(LollmsEnvManager.run_lollmsenv_command, ['activate', env_name, '&&', 'pip', 'list'])
+            self.worker = Worker(self.get_packages, env_name)
             self.worker.finished.connect(self.on_packages_loaded)
             self.worker.error.connect(self.on_error)
             self.worker.start()
+
+    def get_packages(self, env_name):
+        # First, activate the environment
+        activate_result = LollmsEnvManager.run_lollmsenv_command(['activate', env_name])
+        if activate_result is None:
+            raise Exception("Failed to activate environment")
+
+        # Then, list the packages
+        packages_result = LollmsEnvManager.run_lollmsenv_command(['pip', 'list'])
+        if packages_result is None:
+            raise Exception("Failed to list packages")
+
+        return packages_result
 
     def on_packages_loaded(self, packages):
         self.spinner.hide()
@@ -289,7 +319,7 @@ class PackagesView(QWidget):
     def on_error(self, error_message):
         self.spinner.hide()
         QMessageBox.warning(self, "Error", f"An error occurred: {error_message}")
-
+      
     def install_package(self):
         current_env = self.env_selector.currentItem()
         package_name = self.package_input.text()
