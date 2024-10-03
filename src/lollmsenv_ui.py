@@ -48,42 +48,28 @@ class LollmsEnvManager:
             full_command = f"lollmsenv.bat {' '.join(command)}"
             logging.debug(f"Running command: {full_command}")
             
-            # Use shell=True for complex commands
             process = subprocess.Popen(full_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, text=True, cwd=os.getcwd())
             
-            # Set a timeout (e.g., 30 seconds)
-            start_time = time.time()
-            output = []
-            while True:
-                return_code = process.poll()
-                if return_code is not None:
-                    break
-                
-                # Read output line by line
-                for line in process.stdout:
-                    logging.debug(f"Output: {line.strip()}")
-                    output.append(line)
-                
-                if time.time() - start_time > 30:
-                    process.kill()
-                    logging.error("Command timed out")
-                    return None
-                
-                time.sleep(0.1)
-
-            stdout, stderr = process.communicate()
+            stdout, stderr = process.communicate(timeout=30)
             
-            if return_code != 0:
-                logging.error(f"Command failed with return code {return_code}")
+            if process.returncode != 0:
+                logging.error(f"Command failed with return code {process.returncode}")
                 logging.error(f"Error output: {stderr}")
                 return None
 
-            output.extend(stdout.splitlines())
-            logging.debug(f"Command output: {output}")
-            return "\n".join(output).strip()
+            logging.debug(f"Command output: {stdout}")
+            return stdout.strip()
+        except subprocess.TimeoutExpired:
+            logging.error("Command timed out")
+            return None
         except Exception as e:
             logging.error(f"Error running command: {str(e)}")
             return None
+
+    @staticmethod
+    def is_env_active(env_name):
+        result = LollmsEnvManager.run_lollmsenv_command(['current-env'])
+        return result == env_name if result else False
 
 
     @staticmethod
@@ -312,19 +298,21 @@ class PackagesView(QWidget):
             self.worker.start()
 
     def get_packages(self, env_name):
-        # First, activate the environment
-        activate_result = LollmsEnvManager.run_lollmsenv_command(['activate', env_name])
-        logging.debug(f"Activate result: {activate_result}")
-        if activate_result is None:
-            raise Exception("Failed to activate environment")
+        # Check if the environment is already active
+        if not LollmsEnvManager.is_env_active(env_name):
+            # Activate the environment only if it's not already active
+            activate_result = LollmsEnvManager.run_lollmsenv_command(['activate', env_name])
+            logging.debug(f"Activate result: {activate_result}")
+            if activate_result is None:
+                raise Exception(f"Failed to activate environment {env_name}")
 
-        # Then, list the packages
+        # List the packages
         packages_result = LollmsEnvManager.run_lollmsenv_command(['pip', 'list'])
         logging.debug(f"Packages result: {packages_result}")
         if packages_result is None:
             raise Exception("Failed to list packages")
 
-        return packages_result
+        return packages_result  
 
     def on_packages_loaded(self, packages):
         self.spinner.hide()
