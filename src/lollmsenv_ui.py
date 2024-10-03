@@ -1,11 +1,41 @@
 import sys
 import subprocess
+import logging
 from pathlib import Path
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, 
                              QListWidget, QPushButton, QStackedWidget, QInputDialog, 
-                             QMessageBox, QLabel, QLineEdit)
+                             QMessageBox, QLabel, QLineEdit, QProgressBar)
 from PyQt5.QtGui import QIcon
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QThread, pyqtSignal, QTimer
+
+# Set up logging
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+
+class Worker(QThread):
+    finished = pyqtSignal(object)
+    error = pyqtSignal(str)
+
+    def __init__(self, function, *args, **kwargs):
+        super().__init__()
+        self.function = function
+        self.args = args
+        self.kwargs = kwargs
+
+    def run(self):
+        try:
+            result = self.function(*self.args, **self.kwargs)
+            self.finished.emit(result)
+        except Exception as e:
+            logging.error(f"Error in worker thread: {str(e)}")
+            self.error.emit(str(e))
+
+class Spinner(QProgressBar):
+    def __init__(self):
+        super().__init__()
+        self.setRange(0, 0)
+        self.setTextVisible(False)
+        self.setFixedSize(50, 50)
+        self.hide()
 
 class LollmsEnvManager:
     SCRIPT_DIR = Path(__file__).resolve().parent
@@ -15,10 +45,13 @@ class LollmsEnvManager:
     @staticmethod
     def run_lollmsenv_command(command):
         try:
+            logging.debug(f"Running command: lollmsenv.bat {' '.join(command)}")
             result = subprocess.run(['lollmsenv.bat'] + command, capture_output=True, text=True, check=True)
+            logging.debug(f"Command output: {result.stdout}")
             return result.stdout.strip()
         except subprocess.CalledProcessError as e:
-            print(f"Error running command: {e}")
+            logging.error(f"Error running command: {e}")
+            logging.error(f"Error output: {e.stderr}")
             return None
 
     @staticmethod
@@ -209,6 +242,7 @@ class PackagesView(QWidget):
         self.install_button = QPushButton("Install Package")
         self.remove_button = QPushButton("Remove Package")
         self.update_button = QPushButton("Update Package")
+        self.spinner = Spinner()
 
         self.layout.addWidget(QLabel("Select Environment:"))
         self.layout.addWidget(self.env_selector)
@@ -218,6 +252,7 @@ class PackagesView(QWidget):
         self.layout.addWidget(self.install_button)
         self.layout.addWidget(self.remove_button)
         self.layout.addWidget(self.update_button)
+        self.layout.addWidget(self.spinner)
 
         self.setLayout(self.layout)
 
@@ -238,23 +273,43 @@ class PackagesView(QWidget):
         current_env = self.env_selector.currentItem()
         if current_env:
             env_name = current_env.text().split(':')[0]
-            packages = LollmsEnvManager.run_lollmsenv_command(['activate', env_name, '&&', 'pip', 'list'])
-            if packages:
-                self.packages_list.addItems(packages.split('\n')[2:])  # Skip the header rows
+            self.spinner.show()
+            self.worker = Worker(LollmsEnvManager.run_lollmsenv_command, ['activate', env_name, '&&', 'pip', 'list'])
+            self.worker.finished.connect(self.on_packages_loaded)
+            self.worker.error.connect(self.on_error)
+            self.worker.start()
+
+    def on_packages_loaded(self, packages):
+        self.spinner.hide()
+        if packages:
+            self.packages_list.addItems(packages.split('\n')[2:])  # Skip the header rows
+        else:
+            QMessageBox.warning(self, "Error", "Failed to load packages")
+
+    def on_error(self, error_message):
+        self.spinner.hide()
+        QMessageBox.warning(self, "Error", f"An error occurred: {error_message}")
 
     def install_package(self):
         current_env = self.env_selector.currentItem()
         package_name = self.package_input.text()
         if current_env and package_name:
             env_name = current_env.text().split(':')[0]
-            success = LollmsEnvManager.install_package(env_name, package_name)
-            if success:
-                self.refresh_packages()
-                self.package_input.clear()
-            else:
-                QMessageBox.warning(self, "Installation Failed", f"Failed to install package {package_name}")
+            self.spinner.show()
+            self.worker = Worker(LollmsEnvManager.install_package, env_name, package_name)
+            self.worker.finished.connect(self.on_package_installed)
+            self.worker.error.connect(self.on_error)
+            self.worker.start()
         else:
             QMessageBox.warning(self, "Invalid Input", "Please select an environment and enter a package name")
+
+    def on_package_installed(self, success):
+        self.spinner.hide()
+        if success:
+            self.refresh_packages()
+            self.package_input.clear()
+        else:
+            QMessageBox.warning(self, "Installation Failed", f"Failed to install package {self.package_input.text()}")
 
     def remove_package(self):
         current_env = self.env_selector.currentItem()
@@ -265,13 +320,20 @@ class PackagesView(QWidget):
             reply = QMessageBox.question(self, "Remove Package", f"Are you sure you want to remove package {package_name}?",
                                          QMessageBox.Yes | QMessageBox.No)
             if reply == QMessageBox.Yes:
-                success = LollmsEnvManager.remove_package(env_name, package_name)
-                if success:
-                    self.refresh_packages()
-                else:
-                    QMessageBox.warning(self, "Removal Failed", f"Failed to remove package {package_name}")
+                self.spinner.show()
+                self.worker = Worker(LollmsEnvManager.remove_package, env_name, package_name)
+                self.worker.finished.connect(self.on_package_removed)
+                self.worker.error.connect(self.on_error)
+                self.worker.start()
         else:
             QMessageBox.warning(self, "No Selection", "Please select an environment and a package to remove")
+
+    def on_package_removed(self, success):
+        self.spinner.hide()
+        if success:
+            self.refresh_packages()
+        else:
+            QMessageBox.warning(self, "Removal Failed", f"Failed to remove package")
 
     def update_package(self):
         current_env = self.env_selector.currentItem()
@@ -279,13 +341,21 @@ class PackagesView(QWidget):
         if current_env and current_package:
             env_name = current_env.text().split(':')[0]
             package_name = current_package.text().split()[0]
-            success = LollmsEnvManager.update_package(env_name, package_name)
-            if success:
-                self.refresh_packages()
-            else:
-                QMessageBox.warning(self, "Update Failed", f"Failed to update package {package_name}")
+            self.spinner.show()
+            self.worker = Worker(LollmsEnvManager.update_package, env_name, package_name)
+            self.worker.finished.connect(self.on_package_updated)
+            self.worker.error.connect(self.on_error)
+            self.worker.start()
         else:
             QMessageBox.warning(self, "No Selection", "Please select an environment and a package to update")
+
+    def on_package_updated(self, success):
+        self.spinner.hide()
+        if success:
+            self.refresh_packages()
+        else:
+            QMessageBox.warning(self, "Update Failed", "Failed to update package")
+
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -353,6 +423,16 @@ if __name__ == "__main__":
             padding: 5px;
             border: 1px solid #cccccc;
             border-radius: 3px;
+        }
+        QProgressBar {
+            border: 2px solid grey;
+            border-radius: 5px;
+            text-align: center;
+        }
+        QProgressBar::chunk {
+            background-color: #4CAF50;
+            width: 10px;
+            margin: 0.5px;
         }
     """)
     
