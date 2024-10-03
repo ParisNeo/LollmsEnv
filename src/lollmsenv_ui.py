@@ -45,27 +45,42 @@ class LollmsEnvManager:
     @staticmethod
     def run_lollmsenv_command(command):
         try:
-            logging.debug(f"Running command: lollmsenv.bat {' '.join(command)}")
+            full_command = f"lollmsenv.bat {' '.join(command)}"
+            logging.debug(f"Running command: {full_command}")
             
             # Use shell=True for complex commands
-            full_command = f"lollmsenv.bat {' '.join(command)}"
-            process = subprocess.Popen(full_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, text=True)
+            process = subprocess.Popen(full_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, text=True, cwd=os.getcwd())
             
             # Set a timeout (e.g., 30 seconds)
-            try:
-                stdout, stderr = process.communicate(timeout=30)
-            except subprocess.TimeoutExpired:
-                process.kill()
-                logging.error("Command timed out")
-                return None
+            start_time = time.time()
+            output = []
+            while True:
+                return_code = process.poll()
+                if return_code is not None:
+                    break
+                
+                # Read output line by line
+                for line in process.stdout:
+                    logging.debug(f"Output: {line.strip()}")
+                    output.append(line)
+                
+                if time.time() - start_time > 30:
+                    process.kill()
+                    logging.error("Command timed out")
+                    return None
+                
+                time.sleep(0.1)
 
-            if process.returncode != 0:
-                logging.error(f"Command failed with return code {process.returncode}")
+            stdout, stderr = process.communicate()
+            
+            if return_code != 0:
+                logging.error(f"Command failed with return code {return_code}")
                 logging.error(f"Error output: {stderr}")
                 return None
 
-            logging.debug(f"Command output: {stdout}")
-            return stdout.strip()
+            output.extend(stdout.splitlines())
+            logging.debug(f"Command output: {output}")
+            return "\n".join(output).strip()
         except Exception as e:
             logging.error(f"Error running command: {str(e)}")
             return None
@@ -299,11 +314,13 @@ class PackagesView(QWidget):
     def get_packages(self, env_name):
         # First, activate the environment
         activate_result = LollmsEnvManager.run_lollmsenv_command(['activate', env_name])
+        logging.debug(f"Activate result: {activate_result}")
         if activate_result is None:
             raise Exception("Failed to activate environment")
 
         # Then, list the packages
         packages_result = LollmsEnvManager.run_lollmsenv_command(['pip', 'list'])
+        logging.debug(f"Packages result: {packages_result}")
         if packages_result is None:
             raise Exception("Failed to list packages")
 
