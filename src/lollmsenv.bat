@@ -123,10 +123,16 @@ call :log Python %VERSION% registered successfully
 exit /b
 
 :create_env
+:create_env
 setlocal enabledelayedexpansion
 set "ENV_NAME=%~1"
 set "PYTHON_VERSION=%~2"
 set "CUSTOM_DIR=%~3"
+
+echo Creating environment: %ENV_NAME%
+echo Python version: %PYTHON_VERSION%
+echo Custom directory: %CUSTOM_DIR%
+
 if "%PYTHON_VERSION%"=="" (
     call :log No Python version specified, checking for default...
     for /f "tokens=1,* delims=," %%a in ('type "%PYTHON_DIR%\installed_pythons.txt" ^| sort /r') do (
