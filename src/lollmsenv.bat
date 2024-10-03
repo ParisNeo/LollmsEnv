@@ -123,7 +123,6 @@ call :log Python %VERSION% registered successfully
 exit /b
 
 :create_env
-:create_env
 setlocal enabledelayedexpansion
 set "ENV_NAME=%~1"
 set "PYTHON_VERSION=%~2"
@@ -137,10 +136,13 @@ if "%PYTHON_VERSION%"=="" (
     call :log No Python version specified, checking for default...
     for /f "tokens=1,* delims=," %%a in ('type "%PYTHON_DIR%\installed_pythons.txt" ^| sort /r') do (
         set "PYTHON_VERSION=%%a"
-        goto :found_default
+        goto found_default
     )
-    :found_default
 )
+:found_default
+
+echo here
+
 if "%PYTHON_VERSION%"=="" (
     call :log No Python versions found.
     set /p "INSTALL_PYTHON=Do you want to install Python 3.11.9? (Y/N): "
@@ -152,6 +154,8 @@ if "%PYTHON_VERSION%"=="" (
         exit /b 1
     )
 )
+
+echo here 2
 
 set "PYTHON_PATH="
 for /f "tokens=1,2 delims=," %%a in ('findstr /b "%PYTHON_VERSION%," "%PYTHON_DIR%\installed_pythons.txt"') do (
@@ -303,17 +307,45 @@ exit /b
 
 :delete_env
 set "ENV_NAME=%~1"
-for /f "tokens=2 delims=," %%a in ('findstr /b "%ENV_NAME%:" "%ENVS_DIR%\installed_envs.txt"') do set "ENV_PATH=%%a"
+set "ENV_PATH="
+
+echo Debug: Searching for environment: %ENV_NAME%
+echo Debug: Content of installed_envs.txt:
+type "%ENVS_DIR%\installed_envs.txt"
+
+for /f "tokens=1,2,3 delims=," %%a in ('type "%ENVS_DIR%\installed_envs.txt"') do (
+    echo Debug: Checking %%a against %ENV_NAME%
+    if "%%a"=="%ENV_NAME%" (
+        set "ENV_PATH=%%b"
+        echo Debug: Match found. ENV_PATH set to %%b
+    )
+)
 
 if "%ENV_PATH%"=="" (
     call :error Environment '%ENV_NAME%' not found
     exit /b 1
 )
 
-call :log Deleting environment '%ENV_NAME%' from %ENV_PATH%
-rmdir /s /q "%ENV_PATH%"
-findstr /v /b "%ENV_NAME%:" "%ENVS_DIR%\installed_envs.txt" > "%ENVS_DIR%\temp.txt"
+echo Debug: Attempting to delete directory: %ENV_PATH%
+if exist "%ENV_PATH%" (
+    call :log Deleting environment '%ENV_NAME%' from %ENV_PATH%
+    rmdir /s /q "%ENV_PATH%"
+    if errorlevel 1 (
+        call :error Failed to delete directory %ENV_PATH%
+        exit /b 1
+    )
+) else (
+    call :error Directory %ENV_PATH% does not exist
+)
+
+echo Debug: Updating installed_envs.txt
+findstr /v /b "%ENV_NAME%," "%ENVS_DIR%\installed_envs.txt" > "%ENVS_DIR%\temp.txt"
 move /y "%ENVS_DIR%\temp.txt" "%ENVS_DIR%\installed_envs.txt"
+if errorlevel 1 (
+    call :error Failed to update installed_envs.txt
+    exit /b 1
+)
+
 call :log Environment '%ENV_NAME%' deleted successfully
 exit /b
 
