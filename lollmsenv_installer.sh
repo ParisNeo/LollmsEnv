@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION="1.2.5"
+VERSION="1.2.6"
 
 # URL of the latest release
 RELEASE_URL="https://github.com/ParisNeo/LollmsEnv/archive/refs/tags/V${VERSION}.tar.gz"
