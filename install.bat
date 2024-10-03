@@ -83,6 +83,17 @@ if "%LOCAL_INSTALL%"=="0" if "%NO_MODIFY_RC%"=="0" (
     echo set "PATH=%%PATH%%;%SCRIPT_DIR%" >> "!INSTALL_DIR!\source.bat"
     echo A source.bat script has been generated. Run '!INSTALL_DIR!\source.bat' to use LollmsEnv.
 )
+:: Prompt user to install Python 3.11.9
+set /p INSTALL_PYTHON="Do you want to install Python 3.11.9? (Y/N): "
+if /i "%INSTALL_PYTHON%"=="Y" (
+    echo Installing Python 3.11.9...
+    call "%SCRIPT_DIR%\lollmsenv.bat" install-python 3.11.9
+    if errorlevel 1 (
+        echo Failed to install Python 3.11.9
+    ) else (
+        echo Python 3.11.9 installed successfully
+    )
+)
 pause
 goto :eof
 
