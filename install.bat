@@ -94,6 +94,18 @@ if /i "%INSTALL_PYTHON%"=="Y" (
         echo Python 3.11.9 installed successfully
     )
 )
+
+:: Prompt user to install UI
+set /p INSTALL_UI="Do you want to install the LollmsEnv UI? (Y/N): "
+if /i "%INSTALL_UI%"=="Y" (
+    echo Installing LollmsEnv UI...
+    call "%SCRIPT_DIR%\lollmsenv.bat" create-env lollmsenv_ui 3.11.9
+    call "%SCRIPT_DIR%\lollmsenv.bat" activate lollmsenv_ui
+    call "%SCRIPT_DIR%\lollmsenv.bat" install pyqt5
+    copy "src\lollmsenv_ui.py" "%SCRIPT_DIR%\lollmsenv_ui.py"
+    echo LollmsEnv UI installed successfully
+)
+
 pause
 goto :eof
 
