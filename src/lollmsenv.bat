@@ -100,6 +100,27 @@ echo %VERSION%,%TARGET_DIR% >> "%PYTHON_DIR%\installed_pythons.txt"
 call :log Python %VERSION% installed successfully with pip and virtualenv in %TARGET_DIR%
 exit /b
 
+:register_python
+set "PYTHON_PATH=%~1"
+set "VERSION=%~2"
+if not exist "%PYTHON_PATH%\python.exe" (
+    call :error The specified Python path does not contain a valid Python installation.
+    exit /b 1
+)
+call :log Registering Python %VERSION% from %PYTHON_PATH%
+REM Check if venv is installed
+"%PYTHON_PATH%\python.exe" -c "import venv" 2>nul
+if errorlevel 1 (
+    call :log venv module not found. Installing venv...
+    "%PYTHON_PATH%\python.exe" -m pip install virtualenv
+    if errorlevel 1 (
+        call :error Failed to install virtualenv
+        exit /b 1
+    )
+)
+echo %VERSION%,%PYTHON_PATH% >> "%PYTHON_DIR%\installed_pythons.txt"
+call :log Python %VERSION% registered successfully
+exit /b
 :create_env
 set "ENV_NAME=%~1"
 set "PYTHON_VERSION=%~2"
@@ -322,14 +343,16 @@ echo   list-envs                              List installed virtual environment
 echo   create-bundle [name] [python-version] [env-name]  Create a bundle with Python and environment
 echo   delete-env [name]                      Delete a virtual environment
 echo   delete-python [version]                Delete a Python installation
+echo   register-python [path] [version]       Register an existing Python installation
 echo   --help, -h                             Show this help message
 echo.
 echo Description:
 echo   This tool helps manage Python installations and virtual environments.
 echo   It can install multiple Python versions, create and manage
 echo   virtual environments, and create bundles of Python with environments.
-echo   You can also install Python and environments in custom directories.
-echo   Now you can delete environments and Python installations as well.
+echo   You can also install Python and environments in custom directories,
+echo   delete environments and Python installations, and register
+echo   existing Python installations.
 exit /b
 
 :main
@@ -339,6 +362,8 @@ if "%1"=="-h" goto show_help
 
 if "%1"=="install-python" (
     call :install_python "%2" "%3"
+) else if "%1"=="register-python" (
+    call :register_python "%2" "%3"
 ) else if "%1"=="create-env" (
     call :create_env "%2" "%3" "%4"
 ) else if "%1"=="activate" (
