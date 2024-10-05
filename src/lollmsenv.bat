@@ -141,8 +141,6 @@ if "%PYTHON_VERSION%"=="" (
 )
 :found_default
 
-echo here
-
 if "%PYTHON_VERSION%"=="" (
     call :log No Python versions found.
     set /p "INSTALL_PYTHON=Do you want to install Python 3.11.9? (Y/N): "
@@ -154,8 +152,6 @@ if "%PYTHON_VERSION%"=="" (
         exit /b 1
     )
 )
-
-echo here 2
 
 set "PYTHON_PATH="
 for /f "tokens=1,2 delims=," %%a in ('findstr /b "%PYTHON_VERSION%," "%PYTHON_DIR%\installed_pythons.txt"') do (
