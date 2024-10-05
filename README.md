@@ -44,7 +44,7 @@ LollmsEnv is a lightweight and simple tool for managing Python environments and 
    [lollmsenv_installer.sh](https://github.com/ParisNeo/LollmsEnv/releases/download/V1.2.8/lollmsenv_installer.sh)
    Or in the console, type:
    ```
-   wget https://github.com/ParisNeo/LollmsEnv/releases/download/V1.2.7/lollmsenv_installer.sh
+   wget https://github.com/ParisNeo/LollmsEnv/releases/download/V1.2.8/lollmsenv_installer.sh
    ```
 
 3. Make the installer executable:
