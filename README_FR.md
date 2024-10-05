@@ -31,7 +31,7 @@ LollmsEnv est un outil léger et simple pour gérer les environnements et les ve
 ### Windows
 
 1. Téléchargez l'installateur :
-   [lollmsenv_installer.bat](https://github.com/ParisNeo/LollmsEnv/releases/download/V1.2.7/lollmsenv_installer.bat)
+   [lollmsenv_installer.bat](https://github.com/ParisNeo/LollmsEnv/releases/download/V1.2.8/lollmsenv_installer.bat)
 
 2. Exécutez l'installateur :
    ```
@@ -41,10 +41,10 @@ LollmsEnv est un outil léger et simple pour gérer les environnements et les ve
 ### Systèmes basés sur Unix (Linux, macOS)
 
 1. Téléchargez l'installateur :
-   [lollmsenv_installer.sh](https://github.com/ParisNeo/LollmsEnv/releases/download/V1.2.7/lollmsenv_installer.sh)
+   [lollmsenv_installer.sh](https://github.com/ParisNeo/LollmsEnv/releases/download/V1.2.8/lollmsenv_installer.sh)
    ou bien dans la console, tapez:
    ```
-   wget https://github.com/ParisNeo/LollmsEnv/releases/download/V1.2.7/lollmsenv_installer.sh
+   wget https://github.com/ParisNeo/LollmsEnv/releases/download/V1.2.8lollmsenv_installer.sh
    ```
 
 3. Rendez l'installateur exécutable :

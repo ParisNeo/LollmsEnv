@@ -31,7 +31,7 @@ LollmsEnv is a lightweight and simple tool for managing Python environments and 
 ### Windows
 
 1. Download the installer:
-   [lollmsenv_installer.bat](https://github.com/ParisNeo/LollmsEnv/releases/download/V1.2.7/lollmsenv_installer.bat)
+   [lollmsenv_installer.bat](https://github.com/ParisNeo/LollmsEnv/releases/download/V1.2.8/lollmsenv_installer.bat)
 
 2. Run the installer:
    ```
@@ -41,10 +41,10 @@ LollmsEnv is a lightweight and simple tool for managing Python environments and 
 ### Unix-based systems (Linux, macOS)
 
 1. Download the installer:
-   [lollmsenv_installer.sh](https://github.com/ParisNeo/LollmsEnv/releases/download/V1.2.7/lollmsenv_installer.sh)
+   [lollmsenv_installer.sh](https://github.com/ParisNeo/LollmsEnv/releases/download/V1.2.8/lollmsenv_installer.sh)
    Or in the console, type:
    ```
-   wget https://github.com/ParisNeo/LollmsEnv/releases/download/V1.2.7/lollmsenv_installer.sh
+   wget https://github.com/ParisNeo/LollmsEnv/releases/download/V1.2.8/lollmsenv_installer.sh
    ```
 
 3. Make the installer executable:
