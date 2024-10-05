@@ -1,0 +1,2 @@
+class LollmsEnvError(Exception):
+    pass

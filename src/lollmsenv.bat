@@ -261,9 +261,7 @@ if errorlevel 1 (
 set "PROMPT=(%ENV_NAME%) $P$G"
 
 echo Environment activated. You are now using (%ENV_NAME%)
-echo Type 'exit' to deactivate the environment and return to the original prompt.
-
-cmd /k
+set LOLLMS_ENV_ACTIVATED=1
 
 exit /b
 

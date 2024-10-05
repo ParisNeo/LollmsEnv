@@ -32,7 +32,6 @@ call install.bat %*
 
 :: Clean up
 echo Cleaning up...
-cd /d "%USERPROFILE%"
 rmdir /s /q "%TEMP_DIR%"
 
 echo Installation of LollmsEnv version %VERSION% complete.
