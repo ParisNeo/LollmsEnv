@@ -5,6 +5,9 @@
 :: Built by ParisNeo using Lollms
 setlocal enabledelayedexpansion
 
+REM Store the current path
+set "ORIGINAL_PATH=%CD%"
+
 :: Parse command-line arguments
 set "LOCAL_INSTALL=0"
 set "NO_MODIFY_RC=0"
@@ -116,6 +119,11 @@ if /i "%INSTALL_UI%"=="Y" (
     copy "src\lollmsenv_ui.py" "%SCRIPT_DIR%\lollmsenv_ui.py"
     echo LollmsEnv UI installed successfully
 )
+
+REM Restore the original path
+cd /D "%ORIGINAL_PATH%"
+echo Restored to original path: %CD%
+
 
 if "%AUTO_YES%"=="0" pause
 goto :eof
