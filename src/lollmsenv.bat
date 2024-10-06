@@ -214,9 +214,15 @@ if not exist "!ACTIVATE_SCRIPT!" (
     exit /b 1
 )
 
+REM Debug output to verify the activation script is being called
+echo Activating environment: %ENV_NAME%
+echo Calling activation script: !ACTIVATE_SCRIPT!
+
 REM Use call to ensure the activation happens in the current process
 call "!ACTIVATE_SCRIPT!"
+echo Environment activated: %ENV_NAME%
 exit /b
+
 
 :deactivate_env
 echo To deactivate the current environment, run:
