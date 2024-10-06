@@ -8,7 +8,7 @@ REM Built by ParisNeo using Lollms
 REM Adapted for CMD by LoLLMs
 
 set "SCRIPT_DIR=%~dp0"
-set "LOLLMS_HOME=%SCRIPT_DIR%\.."
+set "LOLLMS_HOME=%SCRIPT_DIR%.."
 set "PYTHON_DIR=%LOLLMS_HOME%\pythons"
 set "ENVS_DIR=%LOLLMS_HOME%\envs"
 set "BUNDLES_DIR=%LOLLMS_HOME%\bundles"
