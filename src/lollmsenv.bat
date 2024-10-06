@@ -198,7 +198,6 @@ endlocal
 exit /b
 
 :activate_env
-setlocal enabledelayedexpansion
 set "ENV_NAME=%~1"
 set "INSTALLED_ENVS_FILE=%ENVS_DIR%\installed_envs.txt"
 for /f "tokens=1,2,3 delims=," %%a in ('findstr /b "%ENV_NAME%," "%INSTALLED_ENVS_FILE%"') do (
@@ -214,8 +213,9 @@ if not exist "!ACTIVATE_SCRIPT!" (
     call :error Activation script not found: !ACTIVATE_SCRIPT!
     exit /b 1
 )
+
+REM Use call to ensure the activation happens in the current process
 call "!ACTIVATE_SCRIPT!"
-endlocal
 exit /b
 
 :deactivate_env
