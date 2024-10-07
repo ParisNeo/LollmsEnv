@@ -27,7 +27,6 @@ if "%USE_MASTER%"=="true" (
     echo Downloading LollmsEnv version %VERSION%...
     echo !RELEASE_URL!
     echo '%TEMP_DIR%'
-    pause
     powershell -Command "Invoke-WebRequest -Uri '!RELEASE_URL!' -OutFile '%TEMP_DIR%\lollmsenv.zip'"
     if %errorlevel% neq 0 (
         echo Error downloading LollmsEnv: %errorlevel%
