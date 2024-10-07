@@ -1,7 +1,7 @@
 @echo off
 setlocal enabledelayedexpansion
 :: Version number
-set VERSION=1.2.13
+set VERSION=1.3.0
 set USE_MASTER=false
 
 :: Check for --use-master option
