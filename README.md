@@ -46,7 +46,15 @@ LollmsEnv is a lightweight and simple tool for managing Python environments and 
    ```
    wget https://github.com/ParisNeo/LollmsEnv/releases/download/V1.2.9/lollmsenv_installer.sh
    ```
-
+   If you get an error running this, it might be caused by the windows/linux formats. To solve this just do:
+   ```
+   dos2unix lollmsenv_installer.sh
+   ```
+   If you don't have dos2unix, you can install it:
+   ```
+   sudo apt install dos2unix
+   ```
+   
 3. Make the installer executable:
    ```
    chmod +x lollmsenv_installer.sh
