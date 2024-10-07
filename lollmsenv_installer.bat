@@ -1,6 +1,6 @@
 @echo off
 :: Version number
-set VERSION=1.2.11
+set VERSION=1.2.13
 set USE_MASTER=false
 
 :: Check for --use-master option
