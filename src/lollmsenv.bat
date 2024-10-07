@@ -214,13 +214,8 @@ if not exist "!ACTIVATE_SCRIPT!" (
     exit /b 1
 )
 
-REM Debug output to verify the activation script is being called
-echo Activating environment: %ENV_NAME%
-echo Calling activation script: !ACTIVATE_SCRIPT!
-
-REM Use call to ensure the activation happens in the current process
-call "!ACTIVATE_SCRIPT!"
-echo Environment activated: %ENV_NAME%
+REM Echo the activation command instead of executing it
+echo call "!ACTIVATE_SCRIPT!"
 exit /b
 
 
@@ -363,6 +358,7 @@ if "%1"=="install-python" (
     call :create_env "%2" "%3" "%4"
 ) else if "%1"=="activate" (
     call :activate_env "%2"
+    exit /b
 ) else if "%1"=="deactivate" (
     call :deactivate_env
 ) else if "%1"=="install" (
