@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION="1.2.9"
+VERSION="1.2.10"
 REPO_URL="https://github.com/ParisNeo/LollmsEnv.git"
 RELEASE_URL="https://github.com/ParisNeo/LollmsEnv/archive/refs/tags/V${VERSION}.tar.gz"
 TEMP_DIR="/tmp/lollmsenv_install"
