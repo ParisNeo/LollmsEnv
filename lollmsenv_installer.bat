@@ -1,6 +1,6 @@
 @echo off
 :: Version number
-set VERSION=1.2.9
+set VERSION=1.2.10
 
 :: URL of the latest release
 set RELEASE_URL=https://github.com/ParisNeo/LollmsEnv/archive/refs/tags/V%VERSION%.zip
