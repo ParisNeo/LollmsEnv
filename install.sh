@@ -153,7 +153,7 @@ fi
 if [[ $INSTALL_UI =~ ^[Yy]$ ]]; then
     echo "Installing LollmsEnv UI..."
     "$SCRIPT_DIR/lollmsenv" create-env lollmsenv_ui 3.11.9
-    "$SCRIPT_DIR/lollmsenv" activate lollmsenv_ui
+    source "$SCRIPT_DIR/lollmsenv" activate lollmsenv_ui
     "$SCRIPT_DIR/lollmsenv" install pyqt5
     cp src/lollmsenv_ui.py "$SCRIPT_DIR/lollmsenv_ui.py"
     echo "LollmsEnv UI installed successfully"
