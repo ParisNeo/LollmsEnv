@@ -261,15 +261,11 @@ exit /b
 set "ENV_NAME=%~1"
 set "ENV_PATH="
 
-echo Debug: Searching for environment: %ENV_NAME%
-echo Debug: Content of installed_envs.txt:
 type "%ENVS_DIR%\installed_envs.txt"
 
 for /f "tokens=1,2,3 delims=," %%a in ('type "%ENVS_DIR%\installed_envs.txt"') do (
-    echo Debug: Checking %%a against %ENV_NAME%
     if "%%a"=="%ENV_NAME%" (
         set "ENV_PATH=%%b"
-        echo Debug: Match found. ENV_PATH set to %%b
     )
 )
 
@@ -278,7 +274,6 @@ if "%ENV_PATH%"=="" (
     exit /b 1
 )
 
-echo Debug: Attempting to delete directory: %ENV_PATH%
 if exist "%ENV_PATH%" (
     call :log Deleting environment '%ENV_NAME%' from %ENV_PATH%
     rmdir /s /q "%ENV_PATH%"
@@ -290,7 +285,6 @@ if exist "%ENV_PATH%" (
     call :error Directory %ENV_PATH% does not exist
 )
 
-echo Debug: Updating installed_envs.txt
 findstr /v /b "%ENV_NAME%," "%ENVS_DIR%\installed_envs.txt" > "%ENVS_DIR%\temp.txt"
 move /y "%ENVS_DIR%\temp.txt" "%ENVS_DIR%\installed_envs.txt"
 if errorlevel 1 (
