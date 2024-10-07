@@ -1,37 +1,36 @@
 @echo off
-:: Version number
 set VERSION=1.2.10
-
-:: URL of the latest release
+set REPO_URL=https://github.com/ParisNeo/LollmsEnv.git
 set RELEASE_URL=https://github.com/ParisNeo/LollmsEnv/archive/refs/tags/V%VERSION%.zip
-
-:: Temporary directory for downloading and extraction
 set TEMP_DIR=.\lollmsenv_install
 
-:: Create temporary directory
-if not exist "%TEMP_DIR%" mkdir "%TEMP_DIR%"
-
-:: Download the latest release
-echo Downloading LollmsEnv version %VERSION%...
-powershell -Command "Invoke-WebRequest -Uri '%RELEASE_URL%' -OutFile '%TEMP_DIR%\lollmsenv.zip'"
-if %errorlevel% neq 0 (
-    echo Error downloading LollmsEnv: %errorlevel%
-    exit /b 1
+set USE_MASTER=false
+for %%a in (%*) do (
+    if "%%a"=="--use-master" set USE_MASTER=true
 )
 
-:: Extract the archive
-echo Extracting files...
-powershell -Command "Expand-Archive -Path '%TEMP_DIR%\lollmsenv.zip' -DestinationPath '%TEMP_DIR%' -Force"
+if not exist "%TEMP_DIR%" mkdir "%TEMP_DIR%"
 
-:: Change to the extracted directory
-cd /d "%TEMP_DIR%\LollmsEnv-%VERSION%"
+if %USE_MASTER%==true (
+    echo Cloning master branch...
+    git clone %REPO_URL% %TEMP_DIR%
+    cd /d "%TEMP_DIR%"
+) else (
+    echo Downloading LollmsEnv version %VERSION%...
+    powershell -Command "Invoke-WebRequest -Uri '%RELEASE_URL%' -OutFile '%TEMP_DIR%\lollmsenv.zip'"
+    if %errorlevel% neq 0 (
+        echo Error downloading LollmsEnv: %errorlevel%
+        exit /b 1
+    )
+    powershell -Command "Expand-Archive -Path '%TEMP_DIR%\lollmsenv.zip' -DestinationPath '%TEMP_DIR%' -Force"
+    cd /d "%TEMP_DIR%\LollmsEnv-%VERSION%"
+)
 
-:: Run the install script with forwarded parameters
 echo Running installation...
 call install.bat %*
 
-:: Clean up
 echo Cleaning up...
+cd /d ..
 rmdir /s /q "%TEMP_DIR%"
 
-echo Installation of LollmsEnv version %VERSION% complete.
+echo Installation of LollmsEnv complete.
