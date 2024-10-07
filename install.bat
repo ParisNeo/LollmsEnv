@@ -114,7 +114,9 @@ if "%AUTO_YES%"=="1" (
 if /i "%INSTALL_UI%"=="Y" (
     echo Installing LollmsEnv UI...
     call "%SCRIPT_DIR%\lollmsenv.bat" create-env lollmsenv_ui 3.11.9
-    call "%SCRIPT_DIR%\lollmsenv.bat" activate lollmsenv_ui
+    call "%SCRIPT_DIR%\lollmsenv.bat" activate lollmsenv_ui> tmp.bat
+    call temp.bat
+    del temp.bat
     python --version
     call "%SCRIPT_DIR%\lollmsenv.bat" install pyqt5
     copy "src\lollmsenv_ui.py" "%SCRIPT_DIR%\lollmsenv_ui.py"
