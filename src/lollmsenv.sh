@@ -196,13 +196,14 @@ install_python() {
 }
 
 
-
 create_env() {
     local ENV_NAME=$1
     local PYTHON_VERSION=$2
     local CUSTOM_DIR=$3
     
     local PYTHON_PATH=$(grep "^$PYTHON_VERSION:" "$PYTHON_DIR/installed_pythons.txt" | cut -d':' -f2)/bin/python3
+
+    echo "Using Python: $PYTHON_PATH"
     
     if [ ! -f "$PYTHON_PATH" ]; then
         error "Python $PYTHON_VERSION is not installed"
@@ -219,6 +220,12 @@ create_env() {
     
     echo "$ENV_NAME:$ENV_PATH:$PYTHON_VERSION" >> "$ENVS_DIR/installed_envs.txt"
     log "Environment '$ENV_NAME' created successfully"
+    
+    # Activate the new environment and install basic packages
+    source "$ENV_PATH/bin/activate"
+    pip install --upgrade pip
+    pip install wheel setuptools
+    deactivate
 }
 activate_env() {
     env_name=$1
