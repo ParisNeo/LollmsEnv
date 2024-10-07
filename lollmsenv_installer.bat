@@ -1,4 +1,5 @@
 @echo off
+setlocal enabledelayedexpansion
 :: Version number
 set VERSION=1.2.13
 set USE_MASTER=false
@@ -24,7 +25,10 @@ if "%USE_MASTER%"=="true" (
 
     :: Download the latest release
     echo Downloading LollmsEnv version %VERSION%...
-    powershell -Command "Invoke-WebRequest -Uri '%RELEASE_URL%' -OutFile '%TEMP_DIR%\lollmsenv.zip'"
+    echo !RELEASE_URL!
+    echo '%TEMP_DIR%'
+    pause
+    powershell -Command "Invoke-WebRequest -Uri '!RELEASE_URL!' -OutFile '%TEMP_DIR%\lollmsenv.zip'"
     if %errorlevel% neq 0 (
         echo Error downloading LollmsEnv: %errorlevel%
         exit /b 1
@@ -52,3 +56,5 @@ cd /d ..
 rmdir /s /q "%TEMP_DIR%"
 
 echo Installation of LollmsEnv complete.
+
+endlocal
