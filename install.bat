@@ -128,7 +128,6 @@ cd /D "%ORIGINAL_PATH%"
 echo Restored to original path: %CD%
 
 
-if "%AUTO_YES%"=="0" pause
 goto :eof
 
 :show_help
@@ -139,5 +138,4 @@ echo   --dir ^<directory^> Install LollmsEnv in the specified directory (locally
 echo   --no-modify-rc Do not modify system PATH. Generate a source.bat script instead.
 echo   -y            Automatically answer yes to all prompts.
 echo   -h, --help    Show this help message and exit.
-if "%AUTO_YES%"=="0" pause
 goto :eof
