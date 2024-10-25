@@ -3,11 +3,77 @@ REM LollmsEnv - Lightweight environment management tool for Lollms projects
 REM Copyright (c) 2024 ParisNeo
 REM Licensed under the Apache License, Version 2.0
 REM Built by ParisNeo using Lollms
-SET SCRIPT_DIR=%~dp0
-IF EXIST "%SCRIPT_DIR%.lollmsenv" (
-    SET LOLLMSENV_DIR=%SCRIPT_DIR%.lollmsenv
-) ELSE (
-    SET LOLLMSENV_DIR=%USERPROFILE%\.lollmsenv
+
+REM Enable delayed variable expansion
+setlocal enabledelayedexpansion
+
+REM Get the directory of the current batch file
+set "current_dir=%~dp0"
+echo !current_dir!
+
+REM Remove the trailing backslash from the current directory path
+set "current_dir=!current_dir:~0,-1!"
+
+REM Add the bin folder to the PATH, prepending it to the existing PATH
+set "bin_dir=!current_dir!\bin"
+set "PATH=!bin_dir!;!PATH!"
+
+REM Check if the pythons folder exists in the parent directory
+set "pythons_dir=!current_dir!\pythons"
+set "installed_pythons_file=!pythons_dir!\installed_pythons.txt"
+if exist "!pythons_dir!" (
+    echo Checking if installed_pythons.txt exists at !pythons_dir!
+    echo Pythons dir: !pythons_dir!
+    echo Installed python file: !installed_pythons_file!
+    
+    if exist "!installed_pythons_file!" (
+        echo Reading the first line of installed_pythons.txt
+        for /f "tokens=1,2 delims=," %%a in ('type "!installed_pythons_file!"') do (
+            set "python_version=%%a"
+            set "python_root_dir=%%b"
+            
+            REM Trim any trailing spaces from python_root_dir
+            for /f "tokens=* delims= " %%c in ("%%~b") do set "python_root_dir=%%c"
+            
+            echo Found python version: !python_version!
+            echo Found python root directory: !python_root_dir!
+            
+            REM Check if the variables are set correctly
+            if not defined python_version (
+                echo Error: python_version is not set!
+                goto :error
+            )
+            if not defined python_root_dir (
+                echo Error: python_root_dir is not set!
+                goto :error
+            )
+            
+            REM Add the python root directory to the PATH
+            set "PATH=!python_root_dir!;!PATH!"
+            
+            REM Break after the first line
+            goto :done
+        )
+    ) else (
+        echo Error: installed_pythons.txt not found!
+        goto :error
+    )
+) else (
+    echo Error: pythons directory not found!
+    goto :error
 )
-SET PATH=%LOLLMSENV_DIR%\bin;%PATH%
+
+:done
+REM Capture the modified PATH variable before ending local environment
+endlocal & set "PATH=%PATH%"
+
+echo Updated PATH: %PATH%
 echo LollmsEnv activated. You can now use 'lollmsenv' commands.
+
+REM Return control to the user in the same session
+exit /b 0
+
+:error
+endlocal
+echo LollmsEnv activation failed.
+exit /b 1
