@@ -18,9 +18,10 @@ REM Add the bin folder to the PATH, prepending it to the existing PATH
 set "bin_dir=!current_dir!\bin"
 set "PATH=!bin_dir!;!PATH!"
 
-REM Check if the pythons folder exists in the parent directory
+REM Check if the pythons folder exists
 set "pythons_dir=!current_dir!\pythons"
 set "installed_pythons_file=!pythons_dir!\installed_pythons.txt"
+
 if exist "!pythons_dir!" (
     echo Checking if installed_pythons.txt exists at !pythons_dir!
     echo Pythons dir: !pythons_dir!
@@ -28,19 +29,17 @@ if exist "!pythons_dir!" (
     
     if exist "!installed_pythons_file!" (
         echo Reading the first line of installed_pythons.txt
-        for /f "tokens=1,2 delims=," %%a in ('type "!installed_pythons_file!"') do (
-            set "python_version=%%a"
-            set "python_root_dir=%%b"
+        for /f "tokens=1 delims=," %%a in ('type "!installed_pythons_file!"') do (
+            set "python_folder_name=%%a"
             
-            REM Trim any trailing spaces from python_root_dir
-            for /f "tokens=* delims= " %%c in ("%%~b") do set "python_root_dir=%%c"
+            echo Found python folder name: !python_folder_name!
             
-            echo Found python version: !python_version!
-            echo Found python root directory: !python_root_dir!
+            REM Construct the python root directory path
+            set "python_root_dir=!current_dir!\pythons\!python_folder_name!"
             
             REM Check if the variables are set correctly
-            if not defined python_version (
-                echo Error: python_version is not set!
+            if not defined python_folder_name (
+                echo Error: python_folder_name is not set!
                 goto :error
             )
             if not defined python_root_dir (
@@ -51,7 +50,7 @@ if exist "!pythons_dir!" (
             REM Add the python root directory to the PATH
             set "PATH=!python_root_dir!;!PATH!"
             
-            REM Break after the first line
+            REM Break after processing the first line
             goto :done
         )
     ) else (
