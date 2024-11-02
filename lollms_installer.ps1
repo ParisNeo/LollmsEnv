@@ -1,5 +1,5 @@
 # Version number
-$VERSION = "1.3.2"
+$VERSION = "1.4.0"
 
 # URL of the latest release
 $RELEASE_URL = "https://github.com/ParisNeo/LollmsEnv/archive/refs/tags/V$VERSION.zip"

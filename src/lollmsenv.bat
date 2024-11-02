@@ -7,8 +7,12 @@ REM Licensed under the Apache License, Version 2.0
 REM Built by ParisNeo using Lollms
 REM Adapted for CMD by LoLLMs
 
+@echo off
+REM Define the base path relative to lollmsenv
 set "SCRIPT_DIR=%~dp0"
-set "LOLLMS_HOME=%SCRIPT_DIR%.."
+set "LOLLMS_HOME=%SCRIPT_DIR:~0,-1%"
+for %%I in ("%LOLLMS_HOME%") do set "LOLLMS_HOME=%%~dpI"
+set "LOLLMS_HOME=%LOLLMS_HOME:~0,-1%"
 set "PYTHON_DIR=%LOLLMS_HOME%\pythons"
 set "ENVS_DIR=%LOLLMS_HOME%\envs"
 set "BUNDLES_DIR=%LOLLMS_HOME%\bundles"
@@ -18,6 +22,16 @@ if not exist "%PYTHON_DIR%" mkdir "%PYTHON_DIR%"
 if not exist "%ENVS_DIR%" mkdir "%ENVS_DIR%"
 if not exist "%BUNDLES_DIR%" mkdir "%BUNDLES_DIR%"
 if not exist "%TEMP_DIR%" mkdir "%TEMP_DIR%"
+
+REM Check for installed_pythons.txt in PYTHON_DIR
+if not exist "%PYTHON_DIR%\installed_pythons.txt" (
+    echo. > "%PYTHON_DIR%\installed_pythons.txt"
+)
+
+REM Check for installed_envs.txt in ENVS_DIR
+if not exist "%ENVS_DIR%\installed_envs.txt" (
+    echo. > "%ENVS_DIR%\installed_envs.txt"
+)
 
 goto :main
 
@@ -40,10 +54,6 @@ set "VERSION=%~1"
 set "CUSTOM_DIR=%~2"
 
 call :log Installing Python %VERSION%
-
-REM Define the base path relative to lollmsenv
-set "BASE_DIR=%~dp0.."
-set "PYTHON_DIR=%BASE_DIR%\pythons"
 
 REM Check if Python is already installed
 if exist "%PYTHON_DIR%\%VERSION%\python.exe" (
@@ -87,6 +97,12 @@ if errorlevel 1 (
 REM Remove the _pth file to allow pip installation
 del "%TARGET_DIR%\python*._pth" >nul 2>&1
 
+set "PATH=!TARGET_DIR!;%PATH%"
+
+echo Target dir is %TARGET_DIR%
+python --version
+
+
 REM Download get-pip.py
 curl https://bootstrap.pypa.io/get-pip.py -o "%TARGET_DIR%\get-pip.py"
 if errorlevel 1 (
@@ -109,16 +125,16 @@ if errorlevel 1 (
 )
 
 REM Register the Python installation with a relative path
-set "RELATIVE_PATH=%TARGET_DIR:%BASE_DIR%\=%%BASE_DIR%%\%"
-echo %VERSION%,%RELATIVE_PATH%>> "%PYTHON_DIR%\installed_pythons.txt"
+REM Use for /f to get the relative path
+for /f "delims=" %%i in ('powershell -command "$relativePath = Resolve-Path -Relative -Path '%TARGET_DIR%' -BasePath '%LOLLMS_HOME%'; $relativePath -replace '^\.\\','';"') do set "RELATIVE_PATH=%%i"
 
+REM Display the result
 call :log Python %VERSION% installed successfully with pip and virtualenv in %TARGET_DIR%
-endlocal
+endlocal & set "PATH=%PATH%"
 exit /b
 
 
 :register_python
-set "PYTHON_PATH=%~1"
 set "VERSION=%~2"
 if not exist "%PYTHON_PATH%\python.exe" (
     call :error The specified Python path does not contain a valid Python installation.
@@ -145,10 +161,9 @@ set "ENV_NAME=%~1"
 set "PYTHON_VERSION=%~2"
 set "CUSTOM_DIR=%~3"
 
-REM Define the base path relative to lollmsenv
-set "BASE_DIR=%~dp0.."
-set "PYTHON_DIR=%BASE_DIR%\pythons"
-set "ENVS_DIR=%BASE_DIR%\envs"
+
+echo %LOLLMS_HOME%
+echo %PYTHON_DIR%
 
 echo Creating environment: %ENV_NAME%
 echo Python version: %PYTHON_VERSION%
@@ -162,8 +177,9 @@ if "%PYTHON_VERSION%"=="" (
     )
 )
 :found_default
+echo Found a default python version : !PYTHON_VERSION!
 
-if "%PYTHON_VERSION%"=="" (
+if "!PYTHON_VERSION!"=="" (
     call :log No Python versions found.
     set /p "INSTALL_PYTHON=Do you want to install Python 3.11.9? (Y/N): "
     if /i "!INSTALL_PYTHON!"=="Y" (
@@ -176,11 +192,9 @@ if "%PYTHON_VERSION%"=="" (
     )
 )
 
-set "PYTHON_PATH="
-for /f "tokens=1,2 delims=," %%a in ('findstr /b "%PYTHON_VERSION%," "%PYTHON_DIR%\installed_pythons.txt"') do (
-    set "PYTHON_PATH=%%b"
-    set "PYTHON_PATH=!PYTHON_PATH:%%BASE_DIR%%\=%BASE_DIR%\!"
-)
+set "PYTHON_PATH=%PYTHON_DIR%\!PYTHON_VERSION!"
+
+echo !PYTHON_PATH!
 
 REM Check if PYTHON_PATH is an absolute path
 echo "!PYTHON_PATH!" | findstr /b "\" >nul
@@ -189,11 +203,14 @@ if %errorlevel%==0 (
     set "FULL_PYTHON_PATH=!PYTHON_PATH!"
 ) else (
     REM Relative path
-    set "FULL_PYTHON_PATH=%BASE_DIR%\!PYTHON_PATH!"
+    set "FULL_PYTHON_PATH=%LOLLMS_HOME%\!PYTHON_PATH!"
 )
 
 set "PYTHON_EXE=!FULL_PYTHON_PATH!\python.exe"
 set "VIRTUALENV_EXE=!FULL_PYTHON_PATH!\Scripts\virtualenv.exe"
+
+echo !PYTHON_EXE!
+echo !VIRTUALENV_EXE!
 
 if not exist "!PYTHON_EXE!" (
     call :error Python %PYTHON_VERSION% is not installed or path is incorrect
@@ -202,17 +219,7 @@ if not exist "!PYTHON_EXE!" (
 )
 
 REM Determine the environment path
-if "%CUSTOM_DIR%"=="" (
-    set "ENV_PATH=%ENVS_DIR%\%ENV_NAME%"
-) else (
-    REM Check if CUSTOM_DIR is an absolute path
-    echo "%CUSTOM_DIR%" | findstr /b "\" >nul
-    if %errorlevel%==0 (
-        set "ENV_PATH=%CUSTOM_DIR%\%ENV_NAME%"
-    ) else (
-        set "ENV_PATH=%BASE_DIR%\%CUSTOM_DIR%\%ENV_NAME%"
-    )
-)
+set "ENV_PATH=%ENVS_DIR%\%ENV_NAME%"
 
 call :log Creating virtual environment '%ENV_NAME%' with Python %PYTHON_VERSION% in "!ENV_PATH!"
 "!VIRTUALENV_EXE!" "!ENV_PATH!"
@@ -231,7 +238,7 @@ if errorlevel 1 (
 )
 
 REM Register the environment with a relative path
-set "RELATIVE_ENV_PATH=!ENV_PATH:%BASE_DIR%\=%%BASE_DIR%%\!"
+set "RELATIVE_ENV_PATH=!ENV_PATH:%LOLLMS_HOME%\=%%LOLLMS_HOME%%\!"
 echo %ENV_NAME%,!RELATIVE_ENV_PATH!,%PYTHON_VERSION% >> "%ENVS_DIR%\installed_envs.txt"
 
 call :log Environment '%ENV_NAME%' created successfully
@@ -254,9 +261,6 @@ if "!ENV_PATH!"=="" (
     call :error Environment '%ENV_NAME%' not found
     exit /b 1
 )
-
-REM Define the base path relative to lollmsenv
-set "BASE_DIR=%~dp0.."
 
 REM Check if ENV_PATH is relative and convert it to absolute if necessary
 echo "!ENV_PATH!" | findstr /b "\" >nul
