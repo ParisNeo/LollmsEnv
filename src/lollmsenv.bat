@@ -48,6 +48,29 @@ call :log Cleaning up temporary files...
 if exist "%TEMP_DIR%" rmdir /s /q "%TEMP_DIR%"
 exit /b
 
+:register_python
+set "PYTHON_PATH=%~1"
+set "VERSION=%~2"
+if not exist "%PYTHON_PATH%\python.exe" (
+    call :error The specified Python path does not contain a valid Python installation.
+    exit /b 1
+)
+call :log Registering Python %VERSION% from %PYTHON_PATH%
+REM Check if venv is installed
+"%PYTHON_PATH%\python.exe" -c "import venv" 2>nul
+if errorlevel 1 (
+    call :log venv module not found. Installing venv...
+    "%PYTHON_PATH%\python.exe" -m pip install virtualenv
+    if errorlevel 1 (
+        call :error Failed to install virtualenv
+        exit /b 1
+    )
+)
+echo %VERSION%,%PYTHON_PATH% >> "%PYTHON_DIR%\installed_pythons.txt"
+call :log Python %VERSION% registered successfully
+exit /b
+
+
 :install_python
 setlocal enabledelayedexpansion
 set "VERSION=%~1"
@@ -127,32 +150,13 @@ if errorlevel 1 (
 REM Register the Python installation with a relative path
 REM Use for /f to get the relative path
 for /f "delims=" %%i in ('powershell -command "$relativePath = Resolve-Path -Relative -Path '%TARGET_DIR%' -BasePath '%LOLLMS_HOME%'; $relativePath -replace '^\.\\','';"') do set "RELATIVE_PATH=%%i"
+REM Automatically register the installed Python
+echo %VERSION%,%TARGET_DIR% >> "%PYTHON_DIR%\installed_pythons.txt"
 
 REM Display the result
-call :log Python %VERSION% installed successfully with pip and virtualenv in %TARGET_DIR%
+call :log Python %VERSION% installed and registered successfully with pip and virtualenv in %TARGET_DIR%
+
 endlocal & set "PATH=%PATH%"
-exit /b
-
-
-:register_python
-set "VERSION=%~2"
-if not exist "%PYTHON_PATH%\python.exe" (
-    call :error The specified Python path does not contain a valid Python installation.
-    exit /b 1
-)
-call :log Registering Python %VERSION% from %PYTHON_PATH%
-REM Check if venv is installed
-"%PYTHON_PATH%\python.exe" -c "import venv" 2>nul
-if errorlevel 1 (
-    call :log venv module not found. Installing venv...
-    "%PYTHON_PATH%\python.exe" -m pip install virtualenv
-    if errorlevel 1 (
-        call :error Failed to install virtualenv
-        exit /b 1
-    )
-)
-echo %VERSION%,%PYTHON_PATH% >> "%PYTHON_DIR%\installed_pythons.txt"
-call :log Python %VERSION% registered successfully
 exit /b
 
 :create_env
