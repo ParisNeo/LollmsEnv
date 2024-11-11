@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION="1.4.0"
+VERSION="1.4.1"
 USE_MASTER=false
 
 # Check for --use-master option
