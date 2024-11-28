@@ -229,14 +229,43 @@ create_env() {
 }
 activate_env() {
     env_name=$1
-    env_path="$LOLLMS_HOME/envs/$env_name"
-    echo "$env_path"
+    envs_file="$LOLLMS_HOME/envs/installed_envs.txt"
+    env_path=""
+    python_path=""
+
+    # Check if the environment exists in the installed_envs.txt file
+    if [ -f "$envs_file" ]; then
+        while IFS=: read -r name path python_version; do
+            if [ "$name" == "$env_name" ]; then
+                env_path="$path"
+                python_path=$(grep "^$python_version:" "$PYTHON_DIR/installed_pythons.txt" | cut -d':' -f2)/bin
+                break
+            fi
+        done < "$envs_file"
+    fi
+
+    # If the environment path is not found, return an error
+    if [ -z "$env_path" ]; then
+        echo "[$(date +'%Y-%m-%d %H:%M:%S')] Error: Environment '$env_name' does not exist in $envs_file"
+        return 1
+    fi
+
+    # Check if the environment directory exists
     if [ -d "$env_path" ]; then
         echo "[$(date +'%Y-%m-%d %H:%M:%S')] Activating environment '$env_name'"
+
+        # Add Python path to the PATH variable if it exists
+        if [ -n "$python_path" ] && [ -d "$python_path" ]; then
+            export PATH="$python_path:$PATH"
+            echo "[$(date +'%Y-%m-%d %H:%M:%S')] Added Python path '$python_path' to PATH"
+        fi
+
+        # Activate the environment
         source "$env_path/bin/activate"
         echo "[$(date +'%Y-%m-%d %H:%M:%S')] Environment '$env_name' activated"
     else
-        echo "[$(date +'%Y-%m-%d %H:%M:%S')] Error: Environment '$env_name' does not exist"
+        echo "[$(date +'%Y-%m-%d %H:%M:%S')] Error: Environment directory '$env_path' does not exist"
+        return 1
     fi
 }
 deactivate_env() {
