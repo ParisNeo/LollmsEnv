@@ -244,7 +244,7 @@ activate_env() {
                     python_path="$python_info"
                 else
                     # Version, construct the full path
-                    python_path="$LOLLMS_HOME/python/$python_info"
+                    python_path="$LOLLMS_HOME/pythons/$python_info"
                 fi
                 break
             fi
