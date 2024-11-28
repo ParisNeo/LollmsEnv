@@ -235,10 +235,17 @@ activate_env() {
 
     # Check if the environment exists in the installed_envs.txt file
     if [ -f "$envs_file" ]; then
-        while IFS=: read -r name path python_version; do
+        while IFS=: read -r name path python_info; do
             if [ "$name" == "$env_name" ]; then
                 env_path="$path"
-                python_path=$(grep "^$python_version:" "$PYTHON_DIR/installed_pythons.txt" | cut -d':' -f2)/bin
+                # Determine if python_info is a full path or a version
+                if [[ "$python_info" == /* ]]; then
+                    # Full path
+                    python_path="$python_info"
+                else
+                    # Version, construct the full path
+                    python_path="$LOLLMS_HOME/python/$python_info"
+                fi
                 break
             fi
         done < "$envs_file"
@@ -255,9 +262,11 @@ activate_env() {
         echo "[$(date +'%Y-%m-%d %H:%M:%S')] Activating environment '$env_name'"
 
         # Add Python path to the PATH variable if it exists
-        if [ -n "$python_path" ] && [ -d "$python_path" ]; then
-            export PATH="$python_path:$PATH"
-            echo "[$(date +'%Y-%m-%d %H:%M:%S')] Added Python path '$python_path' to PATH"
+        if [ -n "$python_path" ] && [ -d "$python_path/bin" ]; then
+            export PATH="$python_path/bin:$PATH"
+            echo "[$(date +'%Y-%m-%d %H:%M:%S')] Added Python path '$python_path/bin' to PATH"
+        else
+            echo "[$(date +'%Y-%m-%d %H:%M:%S')] Warning: Python path '$python_path/bin' does not exist or is invalid"
         fi
 
         # Activate the environment
@@ -268,6 +277,7 @@ activate_env() {
         return 1
     fi
 }
+
 deactivate_env() {
     if [ -n "$VIRTUAL_ENV" ]; then
         echo "[$(date +'%Y-%m-%d %H:%M:%S')] Deactivating current environment"
