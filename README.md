@@ -1,4 +1,6 @@
-# LollmsEnv
+# LollmsEnv (DEPRECATED!!)
+
+Please use the new and more powerful PipMaster library instead: [https://github.com/ParisNeo/pipmaster](https://github.com/ParisNeo/pipmaster)
 
 ![GitHub license](https://img.shields.io/github/license/ParisNeo/LollmsEnv)
 ![GitHub stars](https://img.shields.io/github/stars/ParisNeo/LollmsEnv)
